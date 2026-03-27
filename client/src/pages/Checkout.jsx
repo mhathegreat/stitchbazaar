@@ -86,6 +86,7 @@ export default function Checkout() {
     const errs = {}
     if (!form.name.trim())              errs.name    = 'Name is required'
     if (!form.phone.trim())             errs.phone   = 'Phone number is required'
+    else if (form.phone.trim().length < 7) errs.phone = 'Enter a valid phone number'
     if (!form.address.trim())           errs.address = 'Delivery address is required'
     else if (form.address.trim().length < 5) errs.address = 'Address must be at least 5 characters'
     if (!form.city)                     errs.city    = 'Please select a city'
@@ -99,9 +100,9 @@ export default function Checkout() {
     setLoading(true)
     try {
       const payload = {
-        guestName:       !isAuth ? form.name    : undefined,
-        guestPhone:      !isAuth ? form.phone   : undefined,
-        guestEmail:      !isAuth ? form.email   : undefined,
+        guestName:       !isAuth ? form.name  : undefined,
+        guestEmail:      !isAuth ? form.email : undefined,
+        phone:           form.phone,           // required for all users
         deliveryAddress: form.address,
         city:            form.city,
         notes:           form.notes,
@@ -125,6 +126,7 @@ export default function Checkout() {
         const newErrs = {}
         if (fieldErrors.deliveryAddress) newErrs.address = fieldErrors.deliveryAddress[0]
         if (fieldErrors.city)            newErrs.city    = fieldErrors.city[0]
+        if (fieldErrors.phone)           newErrs.phone   = fieldErrors.phone[0]
         if (fieldErrors.items)           newErrs.items   = fieldErrors.items[0]
         if (Object.keys(newErrs).length) setErrors(newErrs)
         const firstMsg = Object.values(fieldErrors).flat()[0]

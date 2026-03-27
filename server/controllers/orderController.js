@@ -22,10 +22,10 @@ export const createOrderSchema = z.object({
   items:           z.array(orderItemSchema).min(1),
   deliveryAddress: z.string().min(3).max(500),
   city:            z.string().min(2).max(80),
+  phone:           z.string().min(7).max(20),   // required for all orders
   notes:           z.string().max(500).optional(),
   paymentMethod:   z.enum(['cash_on_delivery', 'bank_transfer']).default('cash_on_delivery'),
   guestName:       z.string().min(2).max(80).optional(),
-  guestPhone:      z.string().max(20).optional(),
   guestEmail:      z.string().email().optional(),
 })
 
@@ -46,13 +46,13 @@ export async function createOrder(req, res, next) {
       return res.status(422).json({ success: false, errors: parsed.error.flatten().fieldErrors })
     }
 
-    const { items, deliveryAddress, city, notes, paymentMethod,
-            guestName, guestPhone, guestEmail } = parsed.data
+    const { items, deliveryAddress, city, phone, notes, paymentMethod,
+            guestName, guestEmail } = parsed.data
 
-    // Must have either auth user or full guest info
-    if (!req.user && (!guestName || !guestPhone)) {
+    // Guest checkout requires a name
+    if (!req.user && !guestName) {
       return res.status(400).json({
-        success: false, message: 'Guest name and phone are required for guest checkout',
+        success: false, message: 'Full name is required for guest checkout',
       })
     }
 
@@ -118,7 +118,7 @@ export async function createOrder(req, res, next) {
         data: {
           customerId:      req.user?.id,
           guestName,
-          guestPhone,
+          guestPhone:      phone,   // stored for all orders (guest & authenticated)
           guestEmail,
           deliveryAddress,
           city,
