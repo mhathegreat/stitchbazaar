@@ -124,6 +124,7 @@ function AppShell() {
         <Route path="/admin"                     element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
         <Route path="/admin/vendors"             element={<ProtectedRoute role="admin"><AdminVendors /></ProtectedRoute>} />
         <Route path="/admin/products"            element={<ProtectedRoute role="admin"><AdminProducts /></ProtectedRoute>} />
+        <Route path="/admin/products/:id/edit"   element={<ProtectedRoute role="admin"><VendorProductForm /></ProtectedRoute>} />
         <Route path="/admin/orders"              element={<ProtectedRoute role="admin"><AdminOrders /></ProtectedRoute>} />
         <Route path="/admin/payouts"             element={<ProtectedRoute role="admin"><AdminPayouts /></ProtectedRoute>} />
         <Route path="/admin/disputes"            element={<ProtectedRoute role="admin"><AdminDisputes /></ProtectedRoute>} />

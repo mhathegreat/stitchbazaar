@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Eye, CheckCircle, XCircle, Search, Package } from 'lucide-react'
+import { Eye, CheckCircle, XCircle, Search, Package, Edit2 } from 'lucide-react'
 import AdminLayout from './AdminLayout.jsx'
 import { formatPrice } from '../../styles/theme.js'
 import { adminApi } from '../../api/admin.js'
@@ -113,6 +113,11 @@ export default function AdminProducts() {
                         <Link to={`/products/${p.id}`}
                           className="p-1.5 rounded-lg hover:bg-amber-100" style={{ color: '#457B9D' }} title="View">
                           <Eye size={14} />
+                        </Link>
+                        <Link to={`/admin/products/${p.id}/edit`}
+                          state={{ returnPath: '/admin/products' }}
+                          className="p-1.5 rounded-lg hover:bg-amber-100" style={{ color: '#C88B00' }} title="Edit">
+                          <Edit2 size={14} />
                         </Link>
                         {p.status !== 'active' && (
                           <button onClick={() => moderate(p.id, 'active')}

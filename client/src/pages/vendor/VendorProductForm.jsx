@@ -3,7 +3,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useLocation } from 'react-router-dom'
 import { Plus, Trash2, ArrowLeft, Save, Package, Upload } from 'lucide-react'
 import PageWrapper from '../../components/layout/PageWrapper.jsx'
 import { formatPrice } from '../../styles/theme.js'
@@ -36,6 +36,8 @@ function Field({ label, children, required, hint }) {
 export default function VendorProductForm() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
+  const returnPath = location.state?.returnPath || '/vendor/products'
   const isEdit = Boolean(id)
   const fileInputRef = useRef(null)
 
@@ -163,7 +165,7 @@ export default function VendorProductForm() {
         await productsApi.create(payload)
         toast.success('Product created!')
       }
-      navigate('/vendor/products')
+      navigate(returnPath)
     } catch (err) {
       const data = err?.response?.data
       if (data?.errors) {
