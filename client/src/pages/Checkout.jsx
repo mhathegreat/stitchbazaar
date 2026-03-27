@@ -17,6 +17,25 @@ import { formatPrice, cardAccent } from '../styles/theme.js'
 
 const CITIES = ['Karachi','Lahore','Islamabad','Rawalpindi','Faisalabad','Multan','Peshawar','Quetta','Sialkot','Gujranwala','Other']
 
+function Field({ label, name, value, type = 'text', placeholder, error, required, onChange, children }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium mb-1.5" style={{ color: '#1C0A00' }}>
+        {label} {required && <span style={{ color: '#D85A30' }}>*</span>}
+      </label>
+      {children || (
+        <input type={type} name={name} value={value} onChange={onChange} placeholder={placeholder}
+          className="w-full px-4 py-3 rounded-xl text-sm outline-none"
+          style={{ background: '#FFFCF5', border: `2px solid ${error ? '#D85A30' : 'rgba(200,139,0,0.3)'}`, color: '#1C0A00' }}
+          onFocus={e => e.target.style.borderColor = '#C88B00'}
+          onBlur={e => e.target.style.borderColor = error ? '#D85A30' : 'rgba(200,139,0,0.3)'}
+        />
+      )}
+      {error && <p className="text-xs mt-1" style={{ color: '#D85A30' }}>{error}</p>}
+    </div>
+  )
+}
+
 export default function Checkout() {
   const { items, total, count, clearCart, byVendor } = useCart()
   const { user, isAuth } = useAuth()
@@ -105,25 +124,6 @@ export default function Checkout() {
     }
   }
 
-  function Field({ label, name, value, type = 'text', placeholder, error, required, children }) {
-    return (
-      <div>
-        <label className="block text-sm font-medium mb-1.5" style={{ color: '#1C0A00' }}>
-          {label} {required && <span style={{ color: '#D85A30' }}>*</span>}
-        </label>
-        {children || (
-          <input type={type} name={name} value={value} onChange={handleChange} placeholder={placeholder}
-            className="w-full px-4 py-3 rounded-xl text-sm outline-none"
-            style={{ background: '#FFFCF5', border: `2px solid ${error ? '#D85A30' : 'rgba(200,139,0,0.3)'}`, color: '#1C0A00' }}
-            onFocus={e => e.target.style.borderColor = '#C88B00'}
-            onBlur={e => e.target.style.borderColor = error ? '#D85A30' : 'rgba(200,139,0,0.3)'}
-          />
-        )}
-        {error && <p className="text-xs mt-1" style={{ color: '#D85A30' }}>{error}</p>}
-      </div>
-    )
-  }
-
   return (
     <PageWrapper title="Checkout">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
@@ -146,15 +146,15 @@ export default function Checkout() {
                   <h2 className="font-serif font-bold text-base" style={{ color: '#1C0A00' }}>Delivery Information</h2>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Field label="Full Name" name="name" value={form.name} placeholder="Muhammad Ali" error={errors.name} required />
-                  <Field label="Phone (WhatsApp)" name="phone" value={form.phone} type="tel" placeholder="03XX-XXXXXXX" error={errors.phone} required />
+                  <Field label="Full Name" name="name" value={form.name} placeholder="Muhammad Ali" error={errors.name} required onChange={handleChange} />
+                  <Field label="Phone (WhatsApp)" name="phone" value={form.phone} type="tel" placeholder="03XX-XXXXXXX" error={errors.phone} required onChange={handleChange} />
                   <div className="sm:col-span-2">
-                    <Field label="Email" name="email" value={form.email} type="email" placeholder="you@email.com (for confirmation)" />
+                    <Field label="Email" name="email" value={form.email} type="email" placeholder="you@email.com (for confirmation)" onChange={handleChange} />
                   </div>
                   <div className="sm:col-span-2">
-                    <Field label="Delivery Address" name="address" value={form.address} placeholder="House/Flat, Street, Area" error={errors.address} required />
+                    <Field label="Delivery Address" name="address" value={form.address} placeholder="House/Flat, Street, Area" error={errors.address} required onChange={handleChange} />
                   </div>
-                  <Field label="City" name="city" value={form.city} error={errors.city} required>
+                  <Field label="City" name="city" value={form.city} error={errors.city} required onChange={handleChange}>
                     <select name="city" value={form.city} onChange={handleChange}
                       className="w-full px-4 py-3 rounded-xl text-sm outline-none"
                       style={{ background: '#FFFCF5', border: `2px solid ${errors.city ? '#D85A30' : 'rgba(200,139,0,0.3)'}`, color: form.city ? '#1C0A00' : '#A07000' }}>
@@ -162,7 +162,7 @@ export default function Checkout() {
                       {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                   </Field>
-                  <Field label="Order Notes" name="notes" value={form.notes} placeholder="Special instructions (optional)" />
+                  <Field label="Order Notes" name="notes" value={form.notes} placeholder="Special instructions (optional)" onChange={handleChange} />
                 </div>
               </div>
 
