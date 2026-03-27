@@ -131,8 +131,9 @@ export default function VendorProductForm() {
   async function handleSubmit(e) {
     e?.preventDefault()
     if (!form.name.trim()) { toast.error('Product name is required'); return }
+    if (!form.categoryId) { toast.error('Please select a category'); return }
     if (!form.basePrice || isNaN(form.basePrice)) { toast.error('Valid price is required'); return }
-    if (!form.stock || isNaN(form.stock)) { toast.error('Stock quantity is required'); return }
+    if (!form.stock && form.stock !== 0) { toast.error('Stock quantity is required'); return }
 
     setSaving(true)
     const payload = {
@@ -159,7 +160,13 @@ export default function VendorProductForm() {
       }
       navigate('/vendor/products')
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Save failed')
+      const data = err?.response?.data
+      if (data?.errors) {
+        const first = Object.values(data.errors).flat()[0]
+        toast.error(first || 'Validation error — check your inputs')
+      } else {
+        toast.error(data?.message || 'Save failed')
+      }
     } finally { setSaving(false) }
   }
 
@@ -365,18 +372,17 @@ export default function VendorProductForm() {
               {/* Status */}
               <div className="rounded-xl p-4" style={{ background: '#FFF8E7', border: '2px solid rgba(200,139,0,0.15)' }}>
                 <p className="font-serif font-bold text-sm mb-3" style={{ color: '#C88B00' }}>Status</p>
-                {['active', 'inactive', 'draft'].map(s => (
-                  <label key={s} className="flex items-center gap-2.5 py-2 cursor-pointer">
-                    <input type="radio" name="status" value={s} checked={form.status === s}
-                      onChange={() => set('status', s)}
+                {[
+                  { value: 'active',   label: 'Active',   hint: 'Visible to customers' },
+                  { value: 'inactive', label: 'Inactive', hint: 'Hidden from shop' },
+                ].map(s => (
+                  <label key={s.value} className="flex items-center gap-2.5 py-2 cursor-pointer">
+                    <input type="radio" name="status" value={s.value} checked={form.status === s.value}
+                      onChange={() => set('status', s.value)}
                       className="accent-amber-500" />
                     <div>
-                      <p className="text-xs font-semibold capitalize" style={{ color: '#1C0A00' }}>{s}</p>
-                      <p className="text-[10px]" style={{ color: '#7A6050' }}>
-                        {s === 'active'   ? 'Visible to customers'
-                        : s === 'inactive' ? 'Hidden from shop'
-                        : 'Save without publishing'}
-                      </p>
+                      <p className="text-xs font-semibold" style={{ color: '#1C0A00' }}>{s.label}</p>
+                      <p className="text-[10px]" style={{ color: '#7A6050' }}>{s.hint}</p>
                     </div>
                   </label>
                 ))}

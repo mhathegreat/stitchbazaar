@@ -10,15 +10,13 @@ import {
 const router = Router()
 router.use(generalLimiter)
 
-// Public
+// Named routes MUST come before /:id wildcard
 router.get('/autocomplete', autocomplete)
-router.get('/',            listProducts)
-router.get('/:id',         getProduct)
-
-// Vendor only
 router.get('/vendor/mine', requireAuth, requireRole('vendor'), listMyProducts)
+router.get('/',            listProducts)
 router.post('/',           requireAuth, requireRole('vendor', 'admin'), createProduct)
 router.put('/:id',         requireAuth, requireRole('vendor', 'admin'), updateProduct)
 router.delete('/:id',      requireAuth, requireRole('vendor', 'admin'), deleteProduct)
+router.get('/:id',         getProduct)
 
 export default router
