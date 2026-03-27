@@ -1,0 +1,351 @@
+/**
+ * Vendor Controller
+ * Handles vendor registration, profile, dashboard, payouts.
+ */
+
+import { z } from 'zod'
+import prisma from '../utils/prisma.js'
+import { logger } from '../utils/logger.js'
+
+// ── Schemas ──────────────────────────────────────────────────────
+
+export const vendorRegisterSchema = z.object({
+  shopName:        z.string().min(2).max(100).trim(),
+  shopDescription: z.string().max(1000).optional(),
+  city:            z.string().max(50).optional(),
+  colorTheme:      z.string().regex(/^#[0-9A-Fa-f]{6}$/).default('#C88B00'),
+  bankAccountName:   z.string().max(100).optional(),
+  bankAccountNumber: z.string().max(30).optional(),
+  bankName:          z.string().max(80).optional(),
+})
+
+export const vendorUpdateSchema = vendorRegisterSchema.partial()
+
+// ── Controllers ──────────────────────────────────────────────────
+
+/**
+ * GET /api/v1/vendors
+ * Public: list all active vendors.
+ */
+export async function listVendors(req, res, next) {
+  try {
+    const { city, q, page = 1, limit = 20 } = req.query
+    const skip = (Number(page) - 1) * Number(limit)
+
+    const where = { status: 'active' }
+    if (city) where.city = { contains: city, mode: 'insensitive' }
+    if (q)    where.shopName = { contains: q, mode: 'insensitive' }
+
+    const [vendors, total] = await Promise.all([
+      prisma.vendor.findMany({
+        where,
+        skip,
+        take:    Number(limit),
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true, shopName: true, shopDescription: true,
+          logo: true, banner: true, colorTheme: true, city: true,
+          createdAt: true,
+          _count: { select: { products: true } },
+        },
+      }),
+      prisma.vendor.count({ where }),
+    ])
+
+    res.json({ success: true, data: vendors, meta: { total, page: Number(page), limit: Number(limit) } })
+  } catch (err) {
+    next(err)
+  }
+}
+
+/**
+ * GET /api/v1/vendors/:id
+ * Public: single vendor profile + products.
+ */
+export async function getVendor(req, res, next) {
+  try {
+    const vendor = await prisma.vendor.findUnique({
+      where: { id: req.params.id },
+      include: {
+        products: {
+          where:   { status: 'active' },
+          take:    12,
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true, name: true, basePrice: true, images: true,
+            stock: true, category: { select: { name: true } },
+          },
+        },
+        _count: { select: { products: true, orderItems: true } },
+      },
+    })
+
+    if (!vendor) {
+      return res.status(404).json({ success: false, message: 'Vendor not found' })
+    }
+
+    res.json({ success: true, data: vendor })
+  } catch (err) {
+    next(err)
+  }
+}
+
+/**
+ * POST /api/v1/vendors/register
+ * Auth required. Creates a vendor profile for the logged-in user.
+ */
+export async function registerVendor(req, res, next) {
+  try {
+    const parsed = vendorRegisterSchema.safeParse(req.body)
+    if (!parsed.success) {
+      return res.status(422).json({ success: false, errors: parsed.error.flatten().fieldErrors })
+    }
+
+    const existing = await prisma.vendor.findUnique({ where: { userId: req.user.id } })
+    if (existing) {
+      return res.status(409).json({ success: false, message: 'Vendor profile already exists' })
+    }
+
+    const { shopName, shopDescription, city, colorTheme,
+            bankAccountName, bankAccountNumber, bankName } = parsed.data
+
+    const vendor = await prisma.vendor.create({
+      data: {
+        userId:          req.user.id,
+        shopName,
+        shopDescription,
+        city,
+        colorTheme,
+        bankAccountName,
+        bankAccountNumber,
+        bankName,
+        status:          'pending',
+      },
+    })
+
+    // Upgrade user role to vendor
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data:  { role: 'vendor' },
+    })
+
+    logger.info(`Vendor registered: ${shopName} (userId: ${req.user.id})`)
+
+    res.status(201).json({
+      success: true,
+      message: 'Vendor application submitted. Await admin approval.',
+      data:    vendor,
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
+/**
+ * PUT /api/v1/vendors/profile
+ * Vendor: update their own shop profile.
+ */
+export async function updateVendorProfile(req, res, next) {
+  try {
+    const parsed = vendorUpdateSchema.safeParse(req.body)
+    if (!parsed.success) {
+      return res.status(422).json({ success: false, errors: parsed.error.flatten().fieldErrors })
+    }
+
+    const vendor = await prisma.vendor.findUnique({ where: { userId: req.user.id } })
+    if (!vendor) {
+      return res.status(404).json({ success: false, message: 'Vendor profile not found' })
+    }
+
+    const updated = await prisma.vendor.update({
+      where: { id: vendor.id },
+      data:  parsed.data,
+    })
+
+    res.json({ success: true, message: 'Profile updated', data: updated })
+  } catch (err) {
+    next(err)
+  }
+}
+
+/**
+ * GET /api/v1/vendors/dashboard
+ * Vendor: stats overview.
+ */
+export async function getVendorDashboard(req, res, next) {
+  try {
+    const vendor = await prisma.vendor.findUnique({ where: { userId: req.user.id } })
+    if (!vendor) {
+      return res.status(404).json({ success: false, message: 'Vendor profile not found' })
+    }
+
+    const [totalProducts, orderItems, paidPayouts, pendingPayouts, recentOrders] = await Promise.all([
+      prisma.product.count({ where: { vendorId: vendor.id } }),
+
+      prisma.orderItem.findMany({
+        where: { vendorId: vendor.id, vendorStatus: 'delivered' },
+        select: { unitPrice: true, quantity: true },
+      }),
+
+      prisma.payout.aggregate({
+        where:  { vendorId: vendor.id, status: 'paid' },
+        _sum:   { amount: true },
+      }),
+
+      prisma.payout.aggregate({
+        where:  { vendorId: vendor.id, status: 'pending' },
+        _sum:   { amount: true },
+      }),
+
+      prisma.orderItem.findMany({
+        where:   { vendorId: vendor.id },
+        take:    10,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          order:   { select: { id: true, createdAt: true, deliveryAddress: true, city: true,
+                               customer: { select: { name: true, phone: true } } } },
+          product: { select: { name: true } },
+        },
+      }),
+    ])
+
+    const grossRevenue = orderItems.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0)
+    const commission   = Math.round(grossRevenue * vendor.commissionRate / 100)
+    const netRevenue   = grossRevenue - commission
+
+    res.json({
+      success: true,
+      data: {
+        vendor,
+        stats: {
+          totalProducts,
+          totalOrders:   orderItems.length,
+          grossRevenue,
+          netRevenue,
+          paidOut:       paidPayouts._sum.amount || 0,
+          pendingPayout: pendingPayouts._sum.amount || 0,
+        },
+        recentOrders,
+      },
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
+/**
+ * POST /api/v1/vendors/payout-request
+ * Vendor: request a payout of available earnings.
+ */
+export async function requestPayout(req, res, next) {
+  try {
+    const vendor = await prisma.vendor.findUnique({ where: { userId: req.user.id } })
+    if (!vendor) {
+      return res.status(404).json({ success: false, message: 'Vendor profile not found' })
+    }
+
+    // Calculate available amount
+    const delivered = await prisma.orderItem.findMany({
+      where: { vendorId: vendor.id, vendorStatus: 'delivered' },
+      select: { unitPrice: true, quantity: true },
+    })
+    const paid = await prisma.payout.aggregate({
+      where: { vendorId: vendor.id, status: { in: ['paid', 'processing'] } },
+      _sum:  { amount: true },
+    })
+
+    const gross     = delivered.reduce((s, i) => s + i.unitPrice * i.quantity, 0)
+    const net       = gross - Math.round(gross * vendor.commissionRate / 100)
+    const available = net - (paid._sum.amount || 0)
+
+    if (available <= 0) {
+      return res.status(400).json({ success: false, message: 'No available balance to request payout' })
+    }
+
+    const payout = await prisma.payout.create({
+      data: { vendorId: vendor.id, amount: available },
+    })
+
+    logger.info(`Payout requested: vendor ${vendor.id}, amount ${available}`)
+
+    res.status(201).json({
+      success: true,
+      message: 'Payout request submitted',
+      data:    payout,
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
+/**
+ * GET /api/v1/vendors/earnings
+ * Vendor: earnings breakdown by month.
+ */
+export async function getVendorEarnings(req, res, next) {
+  try {
+    const vendor = await prisma.vendor.findUnique({ where: { userId: req.user.id } })
+    if (!vendor) {
+      return res.status(404).json({ success: false, message: 'Vendor profile not found' })
+    }
+
+    const items = await prisma.orderItem.findMany({
+      where:   { vendorId: vendor.id },
+      include: { order: { select: { createdAt: true, status: true } } },
+      orderBy: { createdAt: 'desc' },
+    })
+
+    const payouts = await prisma.payout.findMany({
+      where:   { vendorId: vendor.id },
+      orderBy: { requestedAt: 'desc' },
+    })
+
+    res.json({ success: true, data: { items, payouts, commissionRate: vendor.commissionRate } })
+  } catch (err) {
+    next(err)
+  }
+}
+
+/**
+ * GET /api/v1/vendors/orders
+ * Vendor: paginated list of their order items.
+ */
+export async function getVendorOrders(req, res, next) {
+  try {
+    const { status, page = 1, limit = 20 } = req.query
+
+    const vendor = await prisma.vendor.findUnique({ where: { userId: req.user.id } })
+    if (!vendor) {
+      return res.status(404).json({ success: false, message: 'Vendor profile not found' })
+    }
+
+    const where = { vendorId: vendor.id }
+    if (status) where.vendorStatus = status
+
+    const [items, total] = await Promise.all([
+      prisma.orderItem.findMany({
+        where,
+        skip:    (Number(page) - 1) * Number(limit),
+        take:    Number(limit),
+        orderBy: { createdAt: 'desc' },
+        include: {
+          product: { select: { id: true, name: true, images: true } },
+          variant: { select: { label: true } },
+          order: {
+            select: {
+              id: true, createdAt: true, city: true,
+              deliveryAddress: true, paymentMethod: true,
+              guestName: true, guestPhone: true,
+              customer: { select: { name: true, phone: true } },
+            },
+          },
+        },
+      }),
+      prisma.orderItem.count({ where }),
+    ])
+
+    res.json({ success: true, data: items, meta: { total } })
+  } catch (err) {
+    next(err)
+  }
+}

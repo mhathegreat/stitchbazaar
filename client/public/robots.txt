@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+Allow: /products
+Allow: /vendors
+Allow: /categories
+
+Disallow: /admin/
+Disallow: /vendor/dashboard
+Disallow: /vendor/products
+Disallow: /vendor/orders
+Disallow: /vendor/earnings
+Disallow: /vendor/settings
+Disallow: /customer/
+Disallow: /checkout
+Disallow: /cart
+
+Sitemap: https://stitchbazaar.pk/sitemap.xml

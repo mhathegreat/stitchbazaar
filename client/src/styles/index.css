@@ -1,0 +1,161 @@
+@import "tailwindcss";
+
+/* ── Brand Theme Tokens (Tailwind v4 CSS-based config) ───────── */
+@theme {
+  /* Colors */
+  --color-amber:         #C88B00;
+  --color-amber-light:   #E0A500;
+  --color-amber-dark:    #A07000;
+  --color-coral:         #D85A30;
+  --color-coral-light:   #E87050;
+  --color-coral-dark:    #B84020;
+  --color-emerald:       #0F6E56;
+  --color-purple:        #6A4C93;
+  --color-bright-green:  #2DC653;
+  --color-steel-blue:    #457B9D;
+  --color-warm-white:    #FFFCF5;
+  --color-dark-bg:       #1C0A00;
+  --color-card-bg:       #FFF8E7;
+
+  /* Fonts */
+  --font-serif: 'Georgia', 'Times New Roman', serif;
+  --font-sans:  'Inter', system-ui, sans-serif;
+
+  /* Letter spacing */
+  --letter-spacing-bazaar: 0.18em;
+  --letter-spacing-wide2:  0.08em;
+
+  /* Shadows */
+  --shadow-amber: 0 4px 24px 0 rgba(200,139,0,0.22);
+  --shadow-coral:  0 4px 24px 0 rgba(216,90,48,0.20);
+  --shadow-card:   0 2px 16px 0 rgba(200,139,0,0.14);
+
+  /* Animations */
+  --animate-shimmer: shimmer 1.6s infinite linear;
+  --animate-float:   float 3s ease-in-out infinite;
+}
+
+/* ── Base ─────────────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background-color: #FFFCF5;
+    color: #1C0A00;
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Georgia', serif;
+  }
+
+  /* Custom scrollbar — amber themed */
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: #FFF8E7; }
+  ::-webkit-scrollbar-thumb {
+    background: #C88B00;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: #A07000; }
+}
+
+/* ── Component Utilities ─────────────────────────────────────── */
+@layer components {
+  /* Amber shimmer skeleton loader */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      #FFF0C0 0%, #FFE580 30%, #FFF0C0 60%, #FFEFC0 100%
+    );
+    background-size: 800px 100%;
+    animation: shimmer 1.6s infinite linear;
+  }
+
+  /* Brushstroke underline on section headings */
+  .brushstroke {
+    position: relative;
+    display: inline-block;
+  }
+  .brushstroke::after {
+    content: '';
+    position: absolute;
+    left: 0; bottom: -6px;
+    width: 100%; height: 6px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 12'%3E%3Cpath d='M0 6 Q50 0 100 6 Q150 12 200 6' stroke='%23C88B00' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") center/cover no-repeat;
+  }
+
+  /* Thick dark border mosaic block */
+  .mosaic-block {
+    border: 3px solid #1C0A00;
+    box-shadow: 4px 4px 0 #1C0A00;
+  }
+
+  /* Pill badge */
+  .badge {
+    @apply inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold tracking-wide;
+  }
+
+  /* Product card */
+  .product-card {
+    @apply bg-white rounded-xl overflow-hidden transition-all duration-200;
+    box-shadow: 0 2px 16px 0 rgba(200,139,0,0.14);
+  }
+  .product-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 32px 0 rgba(200,139,0,0.22);
+  }
+
+  /* Primary button */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-150 cursor-pointer;
+    background: #C88B00;
+    color: #1C0A00;
+  }
+  .btn-primary:hover { background: #E0A500; }
+
+  /* Secondary outline button */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-150 cursor-pointer;
+    border: 2px solid #D85A30;
+    color: #D85A30;
+    background: transparent;
+  }
+  .btn-secondary:hover {
+    background: #D85A30;
+    color: #FFFCF5;
+  }
+
+  /* Section wrapper */
+  .section-pad {
+    @apply px-4 sm:px-6 lg:px-8 py-12 md:py-16;
+  }
+}
+
+/* ── Keyframes ───────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0);    }
+  50%       { transform: translateY(-6px); }
+}
+
+/* ── Polygon / mosaic clip paths ─────────────────────────────── */
+.clip-hex  { clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%); }
+.clip-tri  { clip-path: polygon(50% 0%, 100% 100%, 0% 100%); }
+.clip-para { clip-path: polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%); }
+
+/* ── Print styles ─────────────────────────────────────────────── */
+@media print {
+  header, footer, nav, .no-print { display: none !important; }
+  body { background: white !important; color: black !important; }
+  a { color: inherit !important; text-decoration: none !important; }
+}

@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create:*)",
+      "Bash(npx create-vite@latest . --template react --yes)",
+      "Bash(echo {})",
+      "Bash(npm init:*)",
+      "Bash(npm install:*)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(curl -s http://localhost:5000/health)",
+      "Bash(npx prisma:*)",
+      "Bash(curl -s http://localhost:5000/api/v1/categories)",
+      "Bash(curl -s http://localhost:5000/api/v1/products)",
+      "Bash(curl -s -X POST http://localhost:5000/api/v1/auth/login -H \"Content-Type: application/json\" -d '{\"\"email\"\":\"\"bad\"\",\"\"password\"\":\"\"x\"\"}')",
+      "Bash(curl -s -X POST http://localhost:5000/api/v1/auth/register -H \"Content-Type: application/json\" -d '{\"\"name\"\":\"\"Test\"\",\"\"email\"\":\"\"test@test.com\"\",\"\"password\"\":\"\"password123\"\"}')",
+      "Bash(grep -rn \"from ''.*whatsapp''\" \"E:/claude code/StitchBazar/client/src/\" --include=\"*.jsx\")",
+      "Bash(grep -rn \"from ''.*whatsapp''\" \"E:/claude code/StitchBazar/client/src/\" --include=\"*.jsx\" --include=\"*.js\")",
+      "Bash(npx vite:*)"
+    ]
+  }
+}

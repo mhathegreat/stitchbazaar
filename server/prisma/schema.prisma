@@ -1,0 +1,420 @@
+// StitchBazaar Prisma Schema
+// All money stored as integers in paisa (100 paisa = 1 PKR)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Enums ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  customer
+  vendor
+  admin
+}
+
+enum VendorStatus {
+  pending
+  active
+  suspended
+}
+
+enum ProductStatus {
+  active
+  inactive
+  suspended
+}
+
+enum OrderStatus {
+  pending
+  confirmed
+  packed
+  shipped
+  delivered
+  cancelled
+  disputed
+}
+
+enum VendorOrderStatus {
+  pending
+  confirmed
+  packed
+  shipped
+  delivered
+  cancelled
+}
+
+enum PaymentMethod {
+  cash_on_delivery
+  bank_transfer
+}
+
+enum PayoutStatus {
+  pending
+  processing
+  paid
+  rejected
+}
+
+enum DisputeStatus {
+  open
+  investigating
+  resolved
+  closed
+}
+
+enum Lang {
+  en
+  ur
+}
+
+enum CouponType {
+  percentage
+  fixed
+}
+
+// ── Models ───────────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  password      String
+  role          Role      @default(customer)
+  phone         String?
+  address       String?
+  city          String?
+  preferredLang Lang      @default(en)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  vendor           Vendor?
+  orders           Order[]
+  reviews          Review[]
+  wishlists        Wishlist[]
+  disputes         Dispute[]
+  refunds          Refund[]
+  refreshTokens    RefreshToken[]
+  questionsAsked   Question[]     @relation("CustomerQuestions")
+  questionsAnswered Question[]    @relation("VendorAnswers")
+  savedCart        SavedCart?
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model Vendor {
+  id                 String       @id @default(cuid())
+  userId             String       @unique
+  shopName           String
+  shopDescription    String?
+  logo               String?
+  banner             String?
+  colorTheme         String       @default("#C88B00")
+  city               String?
+  bankAccountName    String?
+  bankAccountNumber  String?
+  bankName           String?
+  status             VendorStatus @default(pending)
+  commissionRate     Int          @default(10)   // percentage
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  user               User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products           Product[]
+  orderItems         OrderItem[]
+  payouts            Payout[]
+  bankDetails        BankDetail[]
+
+  @@map("vendors")
+}
+
+model Category {
+  id         String    @id @default(cuid())
+  name       String
+  nameUrdu   String?
+  slug       String    @unique
+  icon       String?
+  color      String    @default("#C88B00")
+  createdAt  DateTime  @default(now())
+
+  products   Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id                String        @id @default(cuid())
+  vendorId          String
+  categoryId        String
+  name              String
+  nameUrdu          String?
+  description       String?
+  descriptionUrdu   String?
+  basePrice         Int           // in paisa
+  salePrice         Int?          // null = no active sale
+  saleEndsAt        DateTime?     // null = sale doesn't expire
+  stock             Int           @default(0)
+  images            String[]
+  tags              String[]
+  status            ProductStatus @default(active)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  vendor            Vendor        @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  category          Category      @relation(fields: [categoryId], references: [id])
+  variants          ProductVariant[]
+  orderItems        OrderItem[]
+  reviews           Review[]
+  wishlists         Wishlist[]
+  questions         Question[]
+
+  @@map("products")
+}
+
+model ProductVariant {
+  id             String   @id @default(cuid())
+  productId      String
+  label          String   // e.g. "Color: Red", "Size: 4mm"
+  priceModifier  Int      @default(0)   // paisa delta (can be negative)
+  stock          Int      @default(0)
+  sku            String?
+  createdAt      DateTime @default(now())
+
+  product        Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderItems     OrderItem[]
+
+  @@map("product_variants")
+}
+
+model Order {
+  id              String        @id @default(cuid())
+  customerId      String?       // null for guest checkout
+  guestName       String?
+  guestPhone      String?
+  guestEmail      String?
+  status          OrderStatus   @default(pending)
+  totalAmount     Int           // in paisa
+  commissionAmount Int          // in paisa
+  paymentMethod   PaymentMethod @default(cash_on_delivery)
+  deliveryAddress String
+  city            String
+  notes           String?
+  couponCode      String?
+  discountAmount  Int           @default(0)  // paisa
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  customer        User?         @relation(fields: [customerId], references: [id])
+  items           OrderItem[]
+  disputes        Dispute[]
+  refund          Refund?
+
+  @@map("orders")
+}
+
+model Coupon {
+  id           String     @id @default(cuid())
+  code         String     @unique
+  type         CouponType @default(percentage)
+  value        Int        // percentage (0-100) or paisa amount
+  minOrder     Int        @default(0)     // minimum order amount in paisa
+  maxUses      Int        @default(0)     // 0 = unlimited
+  usedCount    Int        @default(0)
+  expiresAt    DateTime?
+  active       Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+
+  @@map("coupons")
+}
+
+model OrderItem {
+  id            String            @id @default(cuid())
+  orderId       String
+  productId     String
+  variantId     String?
+  vendorId      String
+  quantity      Int
+  unitPrice     Int               // paisa — snapshot at time of order
+  vendorStatus  VendorOrderStatus @default(pending)
+  vendorNotes   String?
+  createdAt     DateTime          @default(now())
+
+  order         Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product       Product           @relation(fields: [productId], references: [id])
+  variant       ProductVariant?   @relation(fields: [variantId], references: [id])
+  vendor        Vendor            @relation(fields: [vendorId], references: [id])
+
+  @@map("order_items")
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  productId String
+  userId    String
+  rating    Int      // 1-5
+  comment   String?
+  createdAt DateTime @default(now())
+
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, userId])   // one review per user per product
+  @@map("reviews")
+}
+
+model Wishlist {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@map("wishlists")
+}
+
+model Payout {
+  id           String       @id @default(cuid())
+  vendorId     String
+  amount       Int          // paisa
+  status       PayoutStatus @default(pending)
+  requestedAt  DateTime     @default(now())
+  processedAt  DateTime?
+  adminNote    String?
+
+  vendor       Vendor       @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@map("payouts")
+}
+
+model Dispute {
+  id         String        @id @default(cuid())
+  orderId    String
+  customerId String
+  reason     String
+  status     DisputeStatus @default(open)
+  resolution String?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  order      Order         @relation(fields: [orderId], references: [id])
+  customer   User          @relation(fields: [customerId], references: [id])
+
+  @@map("disputes")
+}
+
+enum RefundStatus {
+  pending
+  approved
+  rejected
+}
+
+model Refund {
+  id         String       @id @default(cuid())
+  orderId    String       @unique
+  customerId String
+  reason     String
+  amount     Int          // paisa — amount requested
+  status     RefundStatus @default(pending)
+  adminNote  String?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  order      Order        @relation(fields: [orderId], references: [id])
+  customer   User         @relation(fields: [customerId], references: [id])
+
+  @@map("refunds")
+}
+
+model ShippingRate {
+  id        String   @id @default(cuid())
+  city      String   @unique  // lowercase city name, or "default" for catch-all
+  rate      Int      // paisa
+  freeAbove Int      @default(0)  // free shipping if order >= this (0 = never free)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("shipping_rates")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  userEmail  String?
+  role       String?
+  action     String   // e.g. "vendor.approved", "product.deleted", "payout.paid"
+  entityType String?  // e.g. "Vendor", "Product", "Order"
+  entityId   String?
+  meta       Json?    // extra context
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model Question {
+  id           String    @id @default(cuid())
+  productId    String
+  customerId   String
+  question     String
+  answer       String?
+  answeredAt   DateTime?
+  answeredById String?
+
+  product      Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customer     User      @relation("CustomerQuestions", fields: [customerId], references: [id], onDelete: Cascade)
+  answeredBy   User?     @relation("VendorAnswers", fields: [answeredById], references: [id])
+
+  createdAt    DateTime  @default(now())
+
+  @@index([productId])
+  @@map("questions")
+}
+
+model SavedCart {
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  items       Json      // [{productId, name, price, qty, image}]
+  emailSentAt DateTime?
+  updatedAt   DateTime  @updatedAt
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("saved_carts")
+}
+
+model BankDetail {
+  id            String   @id @default(cuid())
+  vendorId      String
+  accountName   String
+  accountNumber String
+  bankName      String
+  branchCode    String?
+  createdAt     DateTime @default(now())
+
+  vendor        Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@map("bank_details")
+}
