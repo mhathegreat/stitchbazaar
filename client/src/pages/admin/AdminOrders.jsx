@@ -4,10 +4,13 @@
 
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Eye, ShoppingBag } from 'lucide-react'
+import { Eye, ShoppingBag, RefreshCw } from 'lucide-react'
+import toast from 'react-hot-toast'
 import AdminLayout from './AdminLayout.jsx'
 import { formatPrice } from '../../styles/theme.js'
 import { adminApi } from '../../api/admin.js'
+
+const ORDER_STATUSES = ['pending', 'confirmed', 'packed', 'shipped', 'delivered', 'cancelled']
 
 const STATUS_COLORS = {
   pending:   { color: '#C88B00', bg: 'rgba(200,139,0,0.1)'  },
@@ -20,10 +23,11 @@ const STATUS_COLORS = {
 }
 
 export default function AdminOrders() {
-  const [orders,  setOrders]  = useState([])
-  const [loading, setLoading] = useState(true)
-  const [filter,  setFilter]  = useState('all')
-  const [meta,    setMeta]    = useState({})
+  const [orders,   setOrders]   = useState([])
+  const [loading,  setLoading]  = useState(true)
+  const [filter,   setFilter]   = useState('all')
+  const [meta,     setMeta]     = useState({})
+  const [updating, setUpdating] = useState(null)   // orderId being updated
 
   useEffect(() => {
     const params = filter !== 'all' ? { status: filter } : {}
@@ -32,6 +36,19 @@ export default function AdminOrders() {
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [filter])
+
+  async function handleStatusChange(orderId, newStatus) {
+    setUpdating(orderId)
+    try {
+      await adminApi.updateOrderStatus(orderId, newStatus)
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o))
+      toast.success(`Order status updated to ${newStatus}`)
+    } catch {
+      toast.error('Failed to update order status')
+    } finally {
+      setUpdating(null)
+    }
+  }
 
   const filtered = orders
 
@@ -109,11 +126,27 @@ export default function AdminOrders() {
                       <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize"
                         style={{ background: sc.bg, color: sc.color }}>{o.status}</span>
                     </td>
-                    <td className="px-4 py-3 text-right">
-                      <Link to={`/customer/orders/${o.id}`}
-                        className="p-1.5 rounded-lg hover:bg-amber-100 inline-block" style={{ color: '#457B9D' }}>
-                        <Eye size={14} />
-                      </Link>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1.5 justify-end">
+                        <select
+                          value={o.status}
+                          disabled={updating === o.id}
+                          onChange={e => handleStatusChange(o.id, e.target.value)}
+                          className="text-xs px-2 py-1.5 rounded-lg outline-none cursor-pointer"
+                          style={{ background: '#FFF8E7', border: '1.5px solid rgba(200,139,0,0.3)', color: '#1C0A00' }}>
+                          {ORDER_STATUSES.map(s => (
+                            <option key={s} value={s} className="capitalize">{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                          ))}
+                        </select>
+                        {updating === o.id && (
+                          <RefreshCw size={12} className="animate-spin" style={{ color: '#C88B00' }} />
+                        )}
+                        <Link to={`/customer/orders/${o.id}`}
+                          className="p-1.5 rounded-lg hover:bg-amber-100 inline-block shrink-0" style={{ color: '#457B9D' }}
+                          title="View order">
+                          <Eye size={14} />
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 )
