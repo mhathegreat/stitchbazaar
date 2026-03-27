@@ -2,7 +2,7 @@
  * Customer Order Detail — /customer/orders/:id
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, CheckCircle, Clock, Package, Truck, XCircle, MessageCircle, Printer, RotateCcw } from 'lucide-react'
 import toast from 'react-hot-toast'
