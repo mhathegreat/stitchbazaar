@@ -60,11 +60,13 @@ export default function VendorProductForm() {
   const [variants, setVariants] = useState([])
   const [images,   setImages]   = useState([])
 
+  const [catError, setCatError] = useState(false)
+
   // Load categories
   useEffect(() => {
     categoriesApi.list()
-      .then(d => setCategories(d.data || []))
-      .catch(() => {})
+      .then(d => { setCategories(d.data || []); setCatError(false) })
+      .catch(() => setCatError(true))
   }, [])
 
   // Load product for editing
@@ -232,9 +234,11 @@ export default function VendorProductForm() {
                     <select value={form.categoryId} onChange={e => set('categoryId', e.target.value)}
                       className={inputCls} style={inputStyle}>
                       <option value="">-- Select category --</option>
-                      {categories.length > 0
-                        ? categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)
-                        : DEFAULT_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)
+                      {catError
+                        ? <option disabled>Failed to load — refresh page</option>
+                        : categories.length === 0
+                          ? <option disabled>Loading categories…</option>
+                          : categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)
                       }
                     </select>
                   </Field>

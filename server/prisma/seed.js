@@ -28,12 +28,12 @@ async function main() {
 
   // ── 2. Categories ─────────────────────────────────────────────
   const catData = [
-    { slug: 'yarn-thread',   name: 'Yarn & Thread',   color: '#C88B00', description: 'Wool, cotton, acrylic and silk yarns',               image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80' },
-    { slug: 'needles-hooks', name: 'Needles & Hooks', color: '#D85A30', description: 'Knitting needles, crochet hooks, darning needles',    image: 'https://images.unsplash.com/photo-1604170937700-84cfad6413e2?w=600&q=80' },
-    { slug: 'embroidery',    name: 'Embroidery',       color: '#6A4C93', description: 'Embroidery floss, hoops, fabric and kits',            image: 'https://images.unsplash.com/photo-1582719471384-894fbb16e074?w=600&q=80' },
-    { slug: 'fabric',        name: 'Fabric & Canvas',  color: '#457B9D', description: 'Aida cloth, linen, cotton canvas',                   image: 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=600&q=80' },
-    { slug: 'kits-patterns', name: 'Kits & Patterns',  color: '#0F6E56', description: 'Complete craft kits and printed patterns',            image: 'https://images.unsplash.com/photo-1615486511262-c7e080240e9e?w=600&q=80' },
-    { slug: 'tools-storage', name: 'Tools & Storage',  color: '#2DC653', description: 'Scissors, stitch markers, project bags',             image: 'https://images.unsplash.com/photo-1547119957-637f8679db1e?w=600&q=80' },
+    { slug: 'yarn-thread',   name: 'Yarn & Thread',   color: '#C88B00', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80' },
+    { slug: 'needles-hooks', name: 'Needles & Hooks', color: '#D85A30', image: 'https://images.unsplash.com/photo-1604170937700-84cfad6413e2?w=600&q=80' },
+    { slug: 'embroidery',    name: 'Embroidery',       color: '#6A4C93', image: 'https://images.unsplash.com/photo-1582719471384-894fbb16e074?w=600&q=80' },
+    { slug: 'fabric',        name: 'Fabric & Canvas',  color: '#457B9D', image: 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=600&q=80' },
+    { slug: 'kits-patterns', name: 'Kits & Patterns',  color: '#0F6E56', image: 'https://images.unsplash.com/photo-1615486511262-c7e080240e9e?w=600&q=80' },
+    { slug: 'tools-storage', name: 'Tools & Storage',  color: '#2DC653', image: 'https://images.unsplash.com/photo-1547119957-637f8679db1e?w=600&q=80' },
   ]
 
   await Promise.all(
