@@ -70,7 +70,12 @@ export default function VendorRegister() {
   async function handleSubmit() {
     setLoading(true)
     try {
-      await api.post('/vendors/register', { ...shop, bankDetails: bank })
+      await api.post('/vendors/register', {
+        ...shop,
+        bankAccountName:   bank.accountName,
+        bankAccountNumber: bank.accountNumber,
+        bankName:          bank.bankName,
+      })
       setStep(3) // success state
     } catch (err) {
       const msg = err?.response?.data?.message || 'Submission failed. Please try again.'
