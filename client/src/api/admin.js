@@ -39,6 +39,10 @@ export const adminApi = {
   moderateProduct: (id, status) =>
     api.put(`/admin/products/${id}/moderate`, { status }).then(r => r.data),
 
+  // Analytics
+  analytics: () =>
+    api.get('/admin/analytics').then(r => r.data),
+
   // Categories
   categories: () =>
     api.get('/admin/categories').then(r => r.data),

@@ -8,14 +8,6 @@ import AdminLayout from './AdminLayout.jsx'
 import { adminApi } from '../../api/admin.js'
 import toast from 'react-hot-toast'
 
-const MOCK_CATS = [
-  { id: 'c1', name: 'Knitting Needles', nameUrdu: 'سلائیاں',     slug: 'knitting-needles', icon: '🧶', color: '#C88B00', products: 48 },
-  { id: 'c2', name: 'Crochet Hooks',   nameUrdu: 'کروشیا ہکس',  slug: 'crochet-hooks',    icon: '🪝', color: '#D85A30', products: 32 },
-  { id: 'c3', name: 'Yarn & Wool',     nameUrdu: 'اون',          slug: 'yarn-wool',        icon: '🐑', color: '#0F6E56', products: 56 },
-  { id: 'c4', name: 'Thread & Floss',  nameUrdu: 'دھاگا',        slug: 'thread-floss',     icon: '🪡', color: '#6A4C93', products: 28 },
-  { id: 'c5', name: 'Embroidery Hoops',nameUrdu: 'کڑھائی کے حلقے',slug: 'embroidery-hoops',icon: '⭕', color: '#457B9D', products: 18 },
-]
-
 const COLORS = ['#C88B00','#D85A30','#0F6E56','#6A4C93','#457B9D','#2DC653','#E63946','#F4A261']
 
 const BLANK = { name: '', nameUrdu: '', slug: '', icon: '', color: '#C88B00' }
@@ -25,7 +17,7 @@ function slugify(s) {
 }
 
 export default function AdminCategories() {
-  const [cats,    setCats]    = useState(MOCK_CATS)
+  const [cats,    setCats]    = useState([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(null)
   const [form,    setForm]    = useState(BLANK)

@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Package, ShoppingBag, DollarSign, TrendingUp, Plus, Eye, Clock, CheckCircle, Truck, AlertCircle } from 'lucide-react'
+import { Package, ShoppingBag, DollarSign, TrendingUp, Plus, Eye, Clock, CheckCircle, Truck, AlertCircle, Loader2 } from 'lucide-react'
 
 import PageWrapper    from '../../components/layout/PageWrapper.jsx'
 import BeadDots       from '../../components/mosaic/BeadDots.jsx'
@@ -13,6 +13,7 @@ import ColorBlob      from '../../components/mosaic/ColorBlob.jsx'
 import BrushstrokeHeading from '../../components/mosaic/BrushstrokeHeading.jsx'
 import { formatPrice, cardAccent } from '../../styles/theme.js'
 import { vendorsApi } from '../../api/vendors.js'
+import toast from 'react-hot-toast'
 
 const STATUS_CONFIG = {
   pending:   { label: 'Pending',   color: '#C88B00', bg: 'rgba(200,139,0,0.1)',  icon: <Clock size={12} />        },
@@ -32,10 +33,11 @@ const QUICK_LINKS = [
 ]
 
 export default function VendorDashboard() {
-  const [activeTab,    setActiveTab]    = useState('all')
-  const [vendor,       setVendor]       = useState(null)
-  const [stats,        setStats]        = useState(null)
-  const [recentOrders, setRecentOrders] = useState([])
+  const [activeTab,      setActiveTab]      = useState('all')
+  const [vendor,         setVendor]         = useState(null)
+  const [stats,          setStats]          = useState(null)
+  const [recentOrders,   setRecentOrders]   = useState([])
+  const [payoutLoading,  setPayoutLoading]  = useState(false)
 
   useEffect(() => {
     vendorsApi.dashboard()
@@ -44,7 +46,7 @@ export default function VendorDashboard() {
         setStats(d.data.stats)
         setRecentOrders(d.data.recentOrders || [])
       })
-      .catch(() => {})
+      .catch(() => toast.error('Failed to load dashboard'))
   }, [])
 
   const filtered = activeTab === 'all'
@@ -179,14 +181,28 @@ export default function VendorDashboard() {
               </div>
 
               {/* Payout request */}
-              <div className="mt-4 rounded-xl p-4" style={{ background: 'rgba(15,110,86,0.08)', border: '2px solid rgba(15,110,86,0.2)' }}>
-                <p className="font-serif font-bold text-sm mb-1" style={{ color: '#0F6E56' }}>Pending Payout</p>
-                <p className="font-bold text-xl mb-3" style={{ color: '#0F6E56' }}>Rs. 12,400</p>
-                <button className="w-full py-2 rounded-xl text-sm font-bold transition-colors"
-                  style={{ background: '#0F6E56', color: '#FFFCF5' }}>
-                  Request Payout
-                </button>
-              </div>
+              {stats && (
+                <div className="mt-4 rounded-xl p-4" style={{ background: 'rgba(15,110,86,0.08)', border: '2px solid rgba(15,110,86,0.2)' }}>
+                  <p className="font-serif font-bold text-sm mb-1" style={{ color: '#0F6E56' }}>Available for Payout</p>
+                  <p className="font-bold text-xl mb-3" style={{ color: '#0F6E56' }}>{formatPrice(stats.pendingPayout || 0)}</p>
+                  <button
+                    disabled={!stats.pendingPayout || payoutLoading}
+                    onClick={async () => {
+                      setPayoutLoading(true)
+                      try {
+                        await vendorsApi.requestPayout()
+                        toast.success('Payout request submitted!')
+                      } catch (e) {
+                        toast.error(e?.response?.data?.message || 'Payout request failed')
+                      } finally { setPayoutLoading(false) }
+                    }}
+                    className="w-full py-2 rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                    style={{ background: '#0F6E56', color: '#FFFCF5' }}>
+                    {payoutLoading ? <Loader2 size={14} className="animate-spin" /> : null}
+                    {payoutLoading ? 'Requesting…' : 'Request Payout'}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

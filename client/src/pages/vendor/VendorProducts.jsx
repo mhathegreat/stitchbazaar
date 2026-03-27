@@ -18,14 +18,6 @@ const VENDOR_NAV = [
   { to: '/vendor/settings',  label: 'Settings',   icon: <Store size={16} />      },
 ]
 
-const MOCK_PRODUCTS = [
-  { id: 'p1', name: 'Bamboo Knitting Needles Set', sku: 'BKN-001', category: 'Needles', price: 1890, stock: 48, status: 'active',  image: null, sales: 89 },
-  { id: 'p2', name: 'Merino Wool Yarn 100g',       sku: 'MWY-050', category: 'Yarn',    price: 1200, stock:  5, status: 'active',  image: null, sales: 67 },
-  { id: 'p3', name: 'Crochet Hook Set 10pcs',      sku: 'CHS-010', category: 'Hooks',   price: 6500, stock:  0, status: 'draft',   image: null, sales: 43 },
-  { id: 'p4', name: 'Linen Thread White 200m',     sku: 'LTW-200', category: 'Thread',  price:  850, stock: 30, status: 'active',  image: null, sales: 21 },
-  { id: 'p5', name: 'Embroidery Hoop 10 inch',     sku: 'EHO-010', category: 'Hoops',   price:  450, stock: 12, status: 'inactive',image: null, sales: 15 },
-]
-
 const STATUS_COLORS = {
   active:   { color: '#0F6E56', bg: 'rgba(15,110,86,0.1)',  label: 'Active'   },
   inactive: { color: '#7A6050', bg: 'rgba(122,96,80,0.1)',  label: 'Inactive' },
@@ -33,7 +25,7 @@ const STATUS_COLORS = {
 }
 
 export default function VendorProducts() {
-  const [products,     setProducts]     = useState(MOCK_PRODUCTS)
+  const [products,     setProducts]     = useState([])
   const [loading,      setLoading]      = useState(true)
   const [search,       setSearch]       = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
@@ -41,7 +33,7 @@ export default function VendorProducts() {
   useEffect(() => {
     productsApi.mine()
       .then(d => setProducts(d.data || []))
-      .catch(() => { /* keep mock data as fallback */ })
+      .catch(() => { toast.error('Failed to load products'); setProducts([]) })
       .finally(() => setLoading(false))
   }, [])
 

@@ -15,24 +15,31 @@ import DiamondMotif   from '../../components/mosaic/DiamondMotif.jsx'
 import BrushstrokeHeading from '../../components/mosaic/BrushstrokeHeading.jsx'
 import { vendorTheme, formatPrice } from '../../styles/theme.js'
 import { vendorsApi } from '../../api/vendors.js'
+import toast from 'react-hot-toast'
 
 export default function VendorShop() {
   const { id } = useParams()
-  const [vendor, setVendor] = useState(null)
+  const [vendor,  setVendor]  = useState(null)
   const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(false)
 
   useEffect(() => {
     setLoading(true)
+    setError(false)
     vendorsApi.get(id)
       .then(d => setVendor(d.data))
-      .catch(() => {
-        // Fallback mock if API unavailable
-        const theme = vendorTheme(0)
-        setVendor({ id, shopName: 'StitchBazaar Shop', shopDescription: '', city: 'Pakistan',
-          colorTheme: theme.bg, phone: '', _count: { products: 0 }, products: [] })
-      })
+      .catch(() => { toast.error('Could not load vendor shop'); setError(true) })
       .finally(() => setLoading(false))
   }, [id])
+
+  if (error) return (
+    <PageWrapper title="Vendor Not Found">
+      <div className="max-w-6xl mx-auto px-4 py-24 text-center">
+        <p className="font-serif text-2xl font-bold mb-3" style={{ color: '#C88B00' }}>Vendor not found</p>
+        <p className="text-sm" style={{ color: '#7A6050' }}>This shop may no longer be available.</p>
+      </div>
+    </PageWrapper>
+  )
 
   if (loading || !vendor) return (
     <PageWrapper title="Vendor Shop">
@@ -71,7 +78,7 @@ export default function VendorShop() {
                 <MapPin size={13} /> {vendor.city}
               </span>
               <span className="flex items-center gap-1 text-sm" style={{ color: 'rgba(255,252,245,0.8)' }}>
-                <Package size={13} /> {vendor.productCount} products
+                <Package size={13} /> {vendor._count?.products ?? 0} products
               </span>
               {vendor.avgRating > 0 && (
                 <span className="flex items-center gap-1 text-sm" style={{ color: 'rgba(255,252,245,0.8)' }}>
