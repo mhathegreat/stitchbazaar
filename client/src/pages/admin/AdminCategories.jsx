@@ -10,7 +10,7 @@ import toast from 'react-hot-toast'
 
 const COLORS = ['#C88B00','#D85A30','#0F6E56','#6A4C93','#457B9D','#2DC653','#E63946','#F4A261']
 
-const BLANK = { name: '', nameUrdu: '', slug: '', icon: '', color: '#C88B00' }
+const BLANK = { name: '', nameUrdu: '', slug: '', image: '', color: '#C88B00' }
 
 function slugify(s) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
@@ -32,7 +32,7 @@ export default function AdminCategories() {
 
   function set(k, v) { setForm(f => ({ ...f, [k]: v })) }
   function openNew()   { setForm(BLANK); setEditing('new') }
-  function openEdit(c) { setForm({ name: c.name, nameUrdu: c.nameUrdu || '', slug: c.slug, icon: c.icon || '', color: c.color }); setEditing(c.id) }
+  function openEdit(c) { setForm({ name: c.name, nameUrdu: c.nameUrdu || '', slug: c.slug, image: c.image || '', color: c.color }); setEditing(c.id) }
   function cancel()    { setEditing(null) }
 
   async function handleSave() {
@@ -84,9 +84,12 @@ export default function AdminCategories() {
           {cats.map(c => (
             <div key={c.id} className="flex items-center gap-3 p-3 rounded-xl"
               style={{ background: '#FFF8E7', border: '2px solid rgba(200,139,0,0.15)' }}>
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
+              <div className="w-10 h-10 rounded-xl shrink-0 overflow-hidden"
                 style={{ background: c.color + '20' }}>
-                {c.icon || <Tag size={16} style={{ color: c.color }} />}
+                {c.image
+                  ? <img src={c.image} alt={c.name} className="w-full h-full object-cover" />
+                  : <div className="w-full h-full flex items-center justify-center"><Tag size={16} style={{ color: c.color }} /></div>
+                }
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm" style={{ color: '#1C0A00' }}>{c.name}</p>
@@ -136,11 +139,14 @@ export default function AdminCategories() {
                   style={{ background: '#FFFCF5', border: '2px solid rgba(200,139,0,0.2)', color: '#1C0A00' }} />
               </div>
               <div>
-                <label className="block text-xs font-semibold mb-1" style={{ color: '#7A6050' }}>Icon (emoji)</label>
-                <input value={form.icon} onChange={e => set('icon', e.target.value)}
+                <label className="block text-xs font-semibold mb-1" style={{ color: '#7A6050' }}>Image URL</label>
+                {form.image && (
+                  <img src={form.image} alt="preview" className="w-full h-24 object-cover rounded-xl mb-2" onError={e => { e.target.style.display = 'none' }} />
+                )}
+                <input value={form.image} onChange={e => set('image', e.target.value)}
                   className="w-full px-3 py-2 rounded-xl text-sm outline-none"
                   style={{ background: '#FFFCF5', border: '2px solid rgba(200,139,0,0.2)', color: '#1C0A00' }}
-                  placeholder="🧶" maxLength={2} />
+                  placeholder="https://images.unsplash.com/…" />
               </div>
               <div>
                 <label className="block text-xs font-semibold mb-1.5" style={{ color: '#7A6050' }}>Colour</label>

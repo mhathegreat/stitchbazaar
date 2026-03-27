@@ -191,15 +191,25 @@ export default function Home() {
               ? Array.from({ length: 6 }).map((_, i) => <SkeletonCategory key={i} />)
               : categories.length === 0
                 ? <p className="col-span-full text-center text-sm py-6" style={{ color: '#A07000' }}>No categories yet.</p>
-                : categories.map((cat, i) => (
-                  <Link key={cat.id}
-                    to={`/products?categoryId=${cat.id}`}
-                    className="mosaic-block rounded-xl p-4 flex flex-col items-center gap-2 text-center transition-transform hover:-translate-y-1 hover:scale-105"
-                    style={{ background: cat.color || FALLBACK_COLORS[i % FALLBACK_COLORS.length] }}>
-                    <span className="text-3xl">{cat.icon || FALLBACK_ICONS[i % FALLBACK_ICONS.length]}</span>
-                    <span className="font-semibold text-xs leading-tight" style={{ color: '#FFFCF5' }}>{cat.name}</span>
-                  </Link>
-                ))
+                : categories.map((cat, i) => {
+                  const accent = cat.color || FALLBACK_COLORS[i % FALLBACK_COLORS.length]
+                  return (
+                    <Link key={cat.id}
+                      to={`/products?categoryId=${cat.id}`}
+                      className="mosaic-block rounded-xl overflow-hidden flex flex-col text-center transition-transform hover:-translate-y-1 hover:scale-105"
+                      style={{ background: accent }}>
+                      {cat.image
+                        ? <img src={cat.image} alt={cat.name} className="w-full h-24 object-cover" onError={e => { e.target.style.display='none' }} />
+                        : <div className="w-full h-24 flex items-center justify-center" style={{ background: accent + 'cc' }}>
+                            <span className="text-4xl">{FALLBACK_ICONS[i % FALLBACK_ICONS.length]}</span>
+                          </div>
+                      }
+                      <div className="p-3">
+                        <span className="font-semibold text-xs leading-tight block" style={{ color: '#FFFCF5' }}>{cat.name}</span>
+                      </div>
+                    </Link>
+                  )
+                })
             }
           </div>
         </div>
