@@ -186,11 +186,11 @@ export default function VendorProducts() {
                         </td>
                         <td className="px-4 py-3 hidden sm:table-cell">
                           <span className="text-xs px-2 py-1 rounded-full" style={{ background: 'rgba(200,139,0,0.1)', color: '#A07000' }}>
-                            {p.category}
+                            {p.category?.name}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right font-bold" style={{ color: '#C88B00' }}>
-                          {formatPrice(p.price)}
+                          {formatPrice(p.basePrice)}
                         </td>
                         <td className="px-4 py-3 text-right hidden md:table-cell">
                           <span className={p.stock === 0 ? 'font-bold' : p.stock <= 5 ? 'font-semibold' : ''}
@@ -199,7 +199,7 @@ export default function VendorProducts() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-center hidden lg:table-cell" style={{ color: '#7A6050' }}>
-                          {p.sales}
+                          {p._count?.orderItems ?? 0}
                         </td>
                         <td className="px-4 py-3 text-center">
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold"

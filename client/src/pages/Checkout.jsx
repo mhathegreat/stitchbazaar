@@ -88,10 +88,8 @@ export default function Checkout() {
         paymentMethod:   form.paymentMethod,
         items: items.map(i => ({
           productId: i.productId,
-          variantId: i.variantId,
+          variantId: i.variantId || undefined,
           quantity:  i.quantity,
-          unitPrice: i.price,
-          vendorId:  i.vendorId,
         })),
       }
       const { data } = await api.post('/orders', payload)
