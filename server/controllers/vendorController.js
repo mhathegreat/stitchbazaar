@@ -13,6 +13,7 @@ export const vendorRegisterSchema = z.object({
   shopName:        z.string().min(2).max(100).trim(),
   shopDescription: z.string().max(1000).optional(),
   city:            z.string().max(50).optional(),
+  whatsapp:        z.string().max(20).optional(),
   colorTheme:      z.string().regex(/^#[0-9A-Fa-f]{6}$/).default('#C88B00'),
   bankAccountName:   z.string().max(100).optional(),
   bankAccountNumber: z.string().max(30).optional(),

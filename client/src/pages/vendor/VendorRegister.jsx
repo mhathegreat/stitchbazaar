@@ -36,7 +36,7 @@ export default function VendorRegister() {
   const [errors,  setErrors]  = useState({})
 
   const [shop, setShop] = useState({
-    shopName: '', shopDescription: '', city: '', colorTheme: '#C88B00',
+    shopName: '', shopDescription: '', city: '', whatsapp: '', colorTheme: '#C88B00',
   })
   const [bank, setBank] = useState({
     accountName: '', accountNumber: '', bankName: '', branchCode: '',
@@ -75,7 +75,11 @@ export default function VendorRegister() {
     setLoading(true)
     try {
       await api.post('/vendors/register', {
-        ...shop,
+        shopName:        shop.shopName,
+        shopDescription: shop.shopDescription,
+        city:            shop.city,
+        whatsapp:        shop.whatsapp,
+        colorTheme:      shop.colorTheme,
         bankAccountName:   bank.accountName,
         bankAccountNumber: bank.accountNumber,
         bankName:          bank.bankName,
@@ -204,6 +208,9 @@ export default function VendorRegister() {
                   <Field label="Shop Name" name="shopName" value={shop.shopName} onChange={shopChange}
                     placeholder="e.g. CraftHub Lahore" error={errors.shopName} required />
 
+                  <Field label="WhatsApp Number" name="whatsapp" value={shop.whatsapp} onChange={shopChange}
+                    placeholder="03xxxxxxxxx" hint="Customers will contact you on this number" />
+
                   <div>
                     <label className="block text-sm font-medium mb-1.5" style={{ color: '#1C0A00' }}>
                       Shop Description <span style={{ color: '#A07000' }}>(optional)</span>
@@ -277,6 +284,7 @@ export default function VendorRegister() {
                   <div className="rounded-xl p-4 flex flex-col gap-3" style={{ background: '#FFFCF5', border: '1.5px solid rgba(200,139,0,0.2)' }}>
                     <ReviewRow label="Shop Name"    value={shop.shopName} />
                     <ReviewRow label="City"         value={shop.city} />
+                    <ReviewRow label="WhatsApp"     value={shop.whatsapp || '—'} />
                     <ReviewRow label="Description"  value={shop.shopDescription || '—'} />
                     <ReviewRow label="Color Theme"  value={<span className="inline-flex items-center gap-2"><span className="w-4 h-4 rounded-full inline-block" style={{ background: shop.colorTheme }} />{COLOR_THEMES.find(t => t.value === shop.colorTheme)?.label}</span>} />
                   </div>
