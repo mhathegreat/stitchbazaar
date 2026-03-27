@@ -10,16 +10,19 @@ import {
 const router = Router()
 router.use(generalLimiter)
 
-// Public
-router.get('/',    listVendors)
-router.get('/:id', getVendor)
+// ── Public ────────────────────────────────────────────────────────
+router.get('/', listVendors)
 
-// Auth required
+// ── Auth-required routes MUST come before /:id  ───────────────────
+// (Express matches routes in order — /:id would swallow these otherwise)
 router.post('/register',       requireAuth, registerVendor)
 router.put('/profile',         requireAuth, requireRole('vendor'), updateVendorProfile)
 router.get('/dashboard',       requireAuth, requireRole('vendor'), getVendorDashboard)
 router.get('/earnings',        requireAuth, requireRole('vendor'), getVendorEarnings)
 router.get('/orders',          requireAuth, requireRole('vendor'), getVendorOrders)
 router.post('/payout-request', requireAuth, requireRole('vendor'), requestPayout)
+
+// ── Public vendor storefront — must be LAST so named routes win ───
+router.get('/:id', getVendor)
 
 export default router

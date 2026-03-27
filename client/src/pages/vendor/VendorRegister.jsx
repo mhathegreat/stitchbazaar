@@ -9,7 +9,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Store, CreditCard, CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react'
 import toast from 'react-hot-toast'
 
-import api from '../../api/client.js'
+import api, { setAccessToken } from '../../api/client.js'
+import { useAuth } from '../../context/AuthContext.jsx'
 import PageWrapper from '../../components/layout/PageWrapper.jsx'
 import MosaicBackground from '../../components/mosaic/MosaicBackground.jsx'
 import BeadDots from '../../components/mosaic/BeadDots.jsx'
@@ -28,7 +29,8 @@ const COLOR_THEMES = [
 ]
 
 export default function VendorRegister() {
-  const navigate = useNavigate()
+  const navigate        = useNavigate()
+  const { user, refresh } = useAuth()
   const [step,    setStep]    = useState(0)
   const [loading, setLoading] = useState(false)
   const [errors,  setErrors]  = useState({})
@@ -46,6 +48,7 @@ export default function VendorRegister() {
   function validateShop() {
     const errs = {}
     if (!shop.shopName.trim())        errs.shopName = 'Shop name is required'
+    if (shop.shopName.trim().length < 2) errs.shopName = 'Shop name must be at least 2 characters'
     if (!shop.city)                   errs.city     = 'Please select your city'
     if (shop.shopName.length > 80)    errs.shopName = 'Max 80 characters'
     setErrors(errs)
@@ -68,6 +71,7 @@ export default function VendorRegister() {
   }
 
   async function handleSubmit() {
+    if (!user) { toast.error('Please sign in before registering a shop'); navigate('/login'); return }
     setLoading(true)
     try {
       await api.post('/vendors/register', {
@@ -76,10 +80,18 @@ export default function VendorRegister() {
         bankAccountNumber: bank.accountNumber,
         bankName:          bank.bankName,
       })
+      // Refresh JWT so role updates from 'customer' → 'vendor' immediately
+      await refresh().catch(() => {})
       setStep(3) // success state
     } catch (err) {
-      const msg = err?.response?.data?.message || 'Submission failed. Please try again.'
-      toast.error(msg)
+      const data = err?.response?.data
+      if (data?.errors) {
+        // Show first Zod validation error
+        const firstError = Object.values(data.errors).flat()[0]
+        toast.error(firstError || 'Please check your inputs and try again.')
+      } else {
+        toast.error(data?.message || 'Submission failed. Please try again.')
+      }
     } finally {
       setLoading(false)
     }

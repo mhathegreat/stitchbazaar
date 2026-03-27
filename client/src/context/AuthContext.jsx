@@ -40,7 +40,15 @@ export function AuthProvider({ children }) {
     setUser(null)
   }, [])
 
-  const value = { user, token, loading, login, logout, isAuth: !!user }
+  /** Re-fetch a fresh access token (e.g. after role upgrade). */
+  const refresh = useCallback(async () => {
+    const { data } = await api.post('/auth/refresh')
+    setToken(data.data.accessToken)
+    setUser(data.data.user)
+    return data.data.user
+  }, [])
+
+  const value = { user, token, loading, login, logout, refresh, isAuth: !!user }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
