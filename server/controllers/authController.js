@@ -56,10 +56,13 @@ function signRefreshToken(user) {
 }
 
 function setRefreshCookie(res, token) {
+  const isProd = process.env.NODE_ENV === 'production'
   res.cookie('sb_refresh', token, {
     httpOnly: true,
-    secure:   process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure:   isProd,
+    // 'none' required for cross-origin (Vercel → Railway).
+    // 'lax' in dev so localhost works without HTTPS.
+    sameSite: isProd ? 'none' : 'lax',
     maxAge:   7 * 24 * 60 * 60 * 1000,   // 7 days
     path:     '/api/v1/auth',
   })
