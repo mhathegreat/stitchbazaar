@@ -47,7 +47,7 @@ export default function AdminVendors() {
       await adminApi.rejectVendor(id)
       setVendors(vs => vs.map(v => v.id === id ? { ...v, status: 'suspended' } : v))
       toast.success('Vendor rejected — email sent')
-    } catch { toast.error('Action failed') }
+    } catch (e) { toast.error(e?.response?.data?.message || e?.message || 'Action failed') }
   }
 
   return (
