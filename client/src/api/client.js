@@ -27,7 +27,9 @@ api.interceptors.response.use(
   res => res,
   async err => {
     // 401 → try one silent refresh, then reject
-    if (err.response?.status === 401 && !err.config._retry) {
+    // Skip retry if the failing request IS the refresh endpoint (avoids infinite loop)
+    const isRefreshCall = err.config?.url?.includes('/auth/refresh')
+    if (err.response?.status === 401 && !err.config._retry && !isRefreshCall) {
       err.config._retry = true
       try {
         const { data } = await api.post('/auth/refresh')
