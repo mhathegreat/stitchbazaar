@@ -11,6 +11,7 @@ import PageWrapper from '../../components/layout/PageWrapper.jsx'
 import { formatPrice } from '../../styles/theme.js'
 import { buildOrderWhatsAppLink } from '../../utils/whatsapp.js'
 import { ordersApi } from '../../api/orders.js'
+import { useAuth } from '../../context/AuthContext.jsx'
 
 const STATUS_CONFIG = {
   pending:   { label: 'Pending',   color: '#C88B00', bg: 'rgba(200,139,0,0.1)',  icon: <Clock size={14} />,       step: 0 },
@@ -32,6 +33,7 @@ const MOCK_ORDER = {
 
 export default function OrderDetail() {
   const { id } = useParams()
+  const { user } = useAuth()
   const [order,           setOrder]          = useState(MOCK_ORDER)
   const [loading,         setLoading]        = useState(true)
   const [refundReason,    setRefundReason]   = useState('')
@@ -231,7 +233,8 @@ export default function OrderDetail() {
               </a>
             )}
 
-            {order.status === 'delivered' && (
+            {/* Dispute + Refund — customers only */}
+            {user?.role === 'customer' && order.status === 'delivered' && (
               <Link to={`/customer/orders/${order.id}/dispute`}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all hover:-translate-y-0.5"
                 style={{ background: 'rgba(216,90,48,0.1)', color: '#D85A30', border: '1px solid rgba(216,90,48,0.3)' }}>
@@ -239,7 +242,7 @@ export default function OrderDetail() {
               </Link>
             )}
 
-            {order.status === 'delivered' && !refundSubmitted && (
+            {user?.role === 'customer' && order.status === 'delivered' && !refundSubmitted && (
               <button
                 onClick={() => setShowRefundForm(v => !v)}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:-translate-y-0.5"
@@ -247,7 +250,7 @@ export default function OrderDetail() {
                 <RotateCcw size={14} /> Request Refund
               </button>
             )}
-            {refundSubmitted && (
+            {user?.role === 'customer' && refundSubmitted && (
               <span className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold"
                 style={{ background: 'rgba(15,110,86,0.08)', color: '#0F6E56' }}>
                 ✓ Refund requested
@@ -268,8 +271,8 @@ export default function OrderDetail() {
             </Link>
           </div>
 
-          {/* Refund form */}
-          {showRefundForm && (
+          {/* Refund form — customers only */}
+          {user?.role === 'customer' && showRefundForm && (
             <div className="mt-4 rounded-xl p-4" style={{ background: '#FFF8E7', border: '2px solid rgba(106,76,147,0.2)' }}>
               <p className="font-semibold text-sm mb-3" style={{ color: '#6A4C93' }}>Reason for refund</p>
               <textarea
