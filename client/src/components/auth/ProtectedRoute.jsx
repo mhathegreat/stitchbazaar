@@ -15,8 +15,9 @@ export default function ProtectedRoute({ children, role }) {
   const { user, loading } = useAuth()
   const location = useLocation()
 
-  // Wait for the silent-refresh check to complete before deciding
-  if (loading) {
+  // Wait for the silent-refresh check only if we don't yet have a user.
+  // If user is already set (just logged in manually), skip the spinner.
+  if (loading && !user) {
     return (
       <div className="min-h-screen flex items-center justify-center"
         style={{ background: '#FFFCF5' }}>

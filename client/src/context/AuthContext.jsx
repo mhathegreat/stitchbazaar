@@ -14,15 +14,17 @@ export function AuthProvider({ children }) {
   const [token,   setToken]   = useState(null)   // access JWT (in-memory)
   const [loading, setLoading] = useState(true)
 
-  /** Attempt silent token refresh on mount */
+  /** Attempt silent token refresh on mount — 4s safety timeout */
   useEffect(() => {
+    const timeout = setTimeout(() => setLoading(false), 4000)
     api.post('/auth/refresh')
       .then(({ data }) => {
         setToken(data.data.accessToken)
         setUser(data.data.user)
       })
       .catch(() => { /* not logged in — that's fine */ })
-      .finally(() => setLoading(false))
+      .finally(() => { clearTimeout(timeout); setLoading(false) })
+    return () => clearTimeout(timeout)
   }, [])
 
   const login = useCallback(async (email, password) => {
