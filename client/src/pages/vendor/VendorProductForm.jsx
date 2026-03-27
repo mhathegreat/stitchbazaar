@@ -150,6 +150,9 @@ export default function VendorProductForm() {
       tags:        form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
       images,
       status:      form.status,
+      variants:    variants.filter(v => v.label.trim()).map(({ label, priceModifier, stock, sku }) => ({
+        label, priceModifier, stock, sku: sku || undefined,
+      })),
     }
 
     try {

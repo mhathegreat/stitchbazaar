@@ -83,6 +83,7 @@ export default function VendorRegister() {
         bankAccountName:   bank.accountName,
         bankAccountNumber: bank.accountNumber,
         bankName:          bank.bankName,
+        branchCode:        bank.branchCode || undefined,
       })
       // Refresh JWT so role updates from 'customer' → 'vendor' immediately
       await refresh().catch(() => {})

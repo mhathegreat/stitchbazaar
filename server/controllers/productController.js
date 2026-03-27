@@ -9,6 +9,13 @@ import { logger } from '../utils/logger.js'
 
 // ── Schemas ──────────────────────────────────────────────────────
 
+export const variantSchema = z.object({
+  label:         z.string().min(1).max(100),
+  priceModifier: z.number().int().default(0),
+  stock:         z.number().int().min(0).default(0),
+  sku:           z.string().max(50).optional(),
+})
+
 export const productSchema = z.object({
   categoryId:       z.string().cuid(),
   name:             z.string().min(2).max(200).trim(),
@@ -22,13 +29,7 @@ export const productSchema = z.object({
   images:           z.array(z.string().url()).max(8).default([]),
   tags:             z.array(z.string()).max(20).default([]),
   status:           z.enum(['active', 'inactive', 'suspended']).default('active'),
-})
-
-export const variantSchema = z.object({
-  label:         z.string().min(1).max(100),
-  priceModifier: z.number().int().default(0),
-  stock:         z.number().int().min(0).default(0),
-  sku:           z.string().max(50).optional(),
+  variants:         z.array(variantSchema).optional(),
 })
 
 // ── Controllers ──────────────────────────────────────────────────
@@ -147,8 +148,16 @@ export async function createProduct(req, res, next) {
       return res.status(403).json({ success: false, message: 'Vendor account not active' })
     }
 
+    const { variants: variantData, ...productData } = parsed.data
+
     const product = await prisma.product.create({
-      data: { ...parsed.data, vendorId: vendor.id },
+      data: {
+        ...productData,
+        vendorId: vendor.id,
+        ...(variantData?.length ? {
+          variants: { create: variantData },
+        } : {}),
+      },
       include: { category: true, variants: true },
     })
 
@@ -183,9 +192,21 @@ export async function updateProduct(req, res, next) {
       }
     }
 
+    const { variants: variantData, ...productData } = parsed.data
+
+    // Replace variants if provided
+    if (variantData !== undefined) {
+      await prisma.productVariant.deleteMany({ where: { productId: req.params.id } })
+    }
+
     const updated = await prisma.product.update({
       where: { id: req.params.id },
-      data:  parsed.data,
+      data: {
+        ...productData,
+        ...(variantData?.length ? {
+          variants: { create: variantData },
+        } : {}),
+      },
       include: { category: true, variants: true },
     })
 

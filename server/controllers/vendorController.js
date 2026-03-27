@@ -20,6 +20,7 @@ export const vendorRegisterSchema = z.object({
   bankAccountName:   z.string().max(100).optional(),
   bankAccountNumber: z.string().max(30).optional(),
   bankName:          z.string().max(80).optional(),
+  branchCode:        z.string().max(20).optional(),
 })
 
 export const vendorUpdateSchema = vendorRegisterSchema.partial()
@@ -110,7 +111,7 @@ export async function registerVendor(req, res, next) {
     }
 
     const { shopName, shopDescription, city, colorTheme,
-            bankAccountName, bankAccountNumber, bankName } = parsed.data
+            bankAccountName, bankAccountNumber, bankName, branchCode } = parsed.data
 
     const vendor = await prisma.vendor.create({
       data: {
@@ -125,6 +126,19 @@ export async function registerVendor(req, res, next) {
         status:          'pending',
       },
     })
+
+    // Save bank detail record if full info provided
+    if (bankAccountName && bankAccountNumber && bankName) {
+      await prisma.bankDetail.create({
+        data: {
+          vendorId:      vendor.id,
+          accountName:   bankAccountName,
+          accountNumber: bankAccountNumber,
+          bankName,
+          branchCode:    branchCode || null,
+        },
+      })
+    }
 
     // Upgrade user role to vendor
     await prisma.user.update({

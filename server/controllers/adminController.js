@@ -16,6 +16,7 @@ export const categorySchema = z.object({
   nameUrdu:  z.string().max(80).optional(),
   slug:      z.string().min(1).max(80).toLowerCase().trim(),
   icon:      z.string().max(10).optional(),
+  image:     z.string().url().optional().nullable(),
   color:     z.string().regex(/^#[0-9A-Fa-f]{6}$/).default('#C88B00'),
 })
 
