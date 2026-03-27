@@ -34,21 +34,17 @@ export async function submitReview(req, res, next) {
       return res.status(422).json({ success: false, errors: parsed.error.flatten().fieldErrors })
     }
 
-    // Verify user purchased the product
-    const hasPurchased = await prisma.orderItem.findFirst({
-      where: {
-        productId: parsed.data.productId,
-        order:     { customerId: req.user.id, status: 'delivered' },
-      },
-    })
-    if (!hasPurchased) {
-      return res.status(403).json({ success: false, message: 'You can only review products you have purchased' })
+    // Ensure the product exists
+    const product = await prisma.product.findUnique({ where: { id: parsed.data.productId } })
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found' })
     }
 
     const review = await prisma.review.upsert({
       where:  { productId_userId: { productId: parsed.data.productId, userId: req.user.id } },
       update: { rating: parsed.data.rating, comment: parsed.data.comment },
       create: { ...parsed.data, userId: req.user.id },
+      include: { user: { select: { name: true } } },
     })
 
     res.status(201).json({ success: true, data: review })

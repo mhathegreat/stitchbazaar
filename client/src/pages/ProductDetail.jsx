@@ -268,6 +268,7 @@ export default function ProductDetail() {
 
   async function handleSubmitReview(e) {
     e.preventDefault()
+    if (!user) { toast.error('Please sign in to leave a review'); return }
     if (!reviewRating) { toast.error('Please pick a star rating'); return }
     if (!reviewComment.trim()) { toast.error('Please write a comment'); return }
     setSubmitting(true)
