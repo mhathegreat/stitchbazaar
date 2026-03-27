@@ -4,10 +4,13 @@
  * Colored accent top border, vendor badge, star rating, Rs. price, Add to cart.
  */
 
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { Star, ShoppingCart, Heart } from 'lucide-react'
 import { cardAccent, formatPrice } from '../../styles/theme.js'
 import { useCart } from '../../context/CartContext.jsx'
+import { useAuth } from '../../context/AuthContext.jsx'
+import { wishlistApi } from '../../api/wishlist.js'
 import toast from 'react-hot-toast'
 
 function Stars({ rating }) {
@@ -28,9 +31,13 @@ function Stars({ rating }) {
  * @param {object}  props.product   { id, name, basePrice, images, vendorName, vendorId, category, rating, reviewCount, stock }
  * @param {number}  [props.index=0] position in grid — determines accent color
  */
-export default function ProductCard({ product, index = 0 }) {
+export default function ProductCard({ product, index = 0, inWishlist = false }) {
   const { addItem } = useCart()
+  const { isAuth } = useAuth()
+  const navigate = useNavigate()
   const accent = cardAccent(index)
+  const [wished, setWished] = useState(inWishlist)
+  const [wishLoading, setWishLoading] = useState(false)
 
   const {
     id, name, basePrice, salePrice, saleEndsAt, images = [], vendorName, vendorId,
@@ -45,6 +52,29 @@ export default function ProductCard({ product, index = 0 }) {
   const discountPct  = isSaleActive
     ? Math.round((1 - salePrice / basePrice) * 100)
     : 0
+
+  async function handleWishlist(e) {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!isAuth) { toast.error('Sign in to save to wishlist'); navigate('/login'); return }
+    if (wishLoading) return
+    setWishLoading(true)
+    try {
+      if (wished) {
+        await wishlistApi.remove(id)
+        setWished(false)
+        toast.success('Removed from wishlist')
+      } else {
+        await wishlistApi.add(id)
+        setWished(true)
+        toast.success('Added to wishlist')
+      }
+    } catch {
+      toast.error('Could not update wishlist')
+    } finally {
+      setWishLoading(false)
+    }
+  }
 
   function handleAdd(e) {
     e.preventDefault()
@@ -92,12 +122,13 @@ export default function ProductCard({ product, index = 0 }) {
         )}
         {/* Wishlist btn */}
         <button
-          onClick={e => { e.preventDefault(); toast('Wishlist coming soon!') }}
-          className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={handleWishlist}
+          disabled={wishLoading}
+          className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-60"
           style={{ background: '#FFFCF5', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
-          aria-label="Save to wishlist"
+          aria-label={wished ? 'Remove from wishlist' : 'Save to wishlist'}
         >
-          <Heart size={14} style={{ color: '#D85A30' }} />
+          <Heart size={14} fill={wished ? '#D85A30' : 'none'} style={{ color: '#D85A30' }} />
         </button>
       </div>
 
