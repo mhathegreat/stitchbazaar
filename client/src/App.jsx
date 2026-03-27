@@ -9,8 +9,9 @@ import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './context/AuthContext.jsx'
 import { CartProvider  } from './context/CartContext.jsx'
 
-import Navbar  from './components/layout/Navbar.jsx'
-import Footer  from './components/layout/Footer.jsx'
+import Navbar         from './components/layout/Navbar.jsx'
+import Footer         from './components/layout/Footer.jsx'
+import ProtectedRoute from './components/auth/ProtectedRoute.jsx'
 
 // ── Public pages ─────────────────────────────────────────────────
 import Home           from './pages/Home.jsx'
@@ -96,41 +97,41 @@ function AppShell() {
         <Route path="/forgot-password"           element={<ForgotPassword />} />
         <Route path="/reset-password"            element={<ResetPassword />} />
 
-        {/* ── Vendor ── */}
+        {/* ── Vendor (must be logged in as vendor) ── */}
         <Route path="/vendor/register"           element={<VendorRegister />} />
-        <Route path="/vendor/dashboard"          element={<VendorDashboard />} />
-        <Route path="/vendor/products"           element={<VendorProducts />} />
-        <Route path="/vendor/products/new"       element={<VendorProductForm />} />
-        <Route path="/vendor/products/:id/edit"  element={<VendorProductForm />} />
-        <Route path="/vendor/orders"             element={<VendorOrders />} />
-        <Route path="/vendor/earnings"           element={<VendorEarnings />} />
-        <Route path="/vendor/settings"           element={<VendorSettings />} />
-        <Route path="/vendor/import"             element={<VendorImport />} />
+        <Route path="/vendor/dashboard"          element={<ProtectedRoute role="vendor"><VendorDashboard /></ProtectedRoute>} />
+        <Route path="/vendor/products"           element={<ProtectedRoute role="vendor"><VendorProducts /></ProtectedRoute>} />
+        <Route path="/vendor/products/new"       element={<ProtectedRoute role="vendor"><VendorProductForm /></ProtectedRoute>} />
+        <Route path="/vendor/products/:id/edit"  element={<ProtectedRoute role="vendor"><VendorProductForm /></ProtectedRoute>} />
+        <Route path="/vendor/orders"             element={<ProtectedRoute role="vendor"><VendorOrders /></ProtectedRoute>} />
+        <Route path="/vendor/earnings"           element={<ProtectedRoute role="vendor"><VendorEarnings /></ProtectedRoute>} />
+        <Route path="/vendor/settings"           element={<ProtectedRoute role="vendor"><VendorSettings /></ProtectedRoute>} />
+        <Route path="/vendor/import"             element={<ProtectedRoute role="vendor"><VendorImport /></ProtectedRoute>} />
 
         {/* ── Cart / Checkout ── */}
         <Route path="/cart"                      element={<Cart />} />
-        <Route path="/checkout"                  element={<Checkout />} />
-        <Route path="/order-confirmation/:id"    element={<OrderConfirmation />} />
+        <Route path="/checkout"                  element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+        <Route path="/order-confirmation/:id"    element={<ProtectedRoute><OrderConfirmation /></ProtectedRoute>} />
 
-        {/* ── Customer ── */}
-        <Route path="/customer/orders"           element={<CustomerOrders />} />
-        <Route path="/customer/orders/:id"       element={<OrderDetail />} />
-        <Route path="/customer/orders/:id/dispute" element={<Dispute />} />
-        <Route path="/customer/wishlist"         element={<CustomerWishlist />} />
-        <Route path="/customer/profile"          element={<CustomerProfile />} />
+        {/* ── Customer (must be logged in) ── */}
+        <Route path="/customer/orders"           element={<ProtectedRoute><CustomerOrders /></ProtectedRoute>} />
+        <Route path="/customer/orders/:id"       element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
+        <Route path="/customer/orders/:id/dispute" element={<ProtectedRoute><Dispute /></ProtectedRoute>} />
+        <Route path="/customer/wishlist"         element={<ProtectedRoute><CustomerWishlist /></ProtectedRoute>} />
+        <Route path="/customer/profile"          element={<ProtectedRoute><CustomerProfile /></ProtectedRoute>} />
 
-        {/* ── Admin ── */}
-        <Route path="/admin"                     element={<AdminDashboard />} />
-        <Route path="/admin/vendors"             element={<AdminVendors />} />
-        <Route path="/admin/products"            element={<AdminProducts />} />
-        <Route path="/admin/orders"              element={<AdminOrders />} />
-        <Route path="/admin/payouts"             element={<AdminPayouts />} />
-        <Route path="/admin/disputes"            element={<AdminDisputes />} />
-        <Route path="/admin/categories"          element={<AdminCategories />} />
-        <Route path="/admin/coupons"             element={<AdminCoupons />} />
-        <Route path="/admin/shipping"            element={<AdminShipping />} />
-        <Route path="/admin/refunds"             element={<AdminRefunds />} />
-        <Route path="/admin/audit"               element={<AdminAuditLog />} />
+        {/* ── Admin (must be logged in as admin) ── */}
+        <Route path="/admin"                     element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/admin/vendors"             element={<ProtectedRoute role="admin"><AdminVendors /></ProtectedRoute>} />
+        <Route path="/admin/products"            element={<ProtectedRoute role="admin"><AdminProducts /></ProtectedRoute>} />
+        <Route path="/admin/orders"              element={<ProtectedRoute role="admin"><AdminOrders /></ProtectedRoute>} />
+        <Route path="/admin/payouts"             element={<ProtectedRoute role="admin"><AdminPayouts /></ProtectedRoute>} />
+        <Route path="/admin/disputes"            element={<ProtectedRoute role="admin"><AdminDisputes /></ProtectedRoute>} />
+        <Route path="/admin/categories"          element={<ProtectedRoute role="admin"><AdminCategories /></ProtectedRoute>} />
+        <Route path="/admin/coupons"             element={<ProtectedRoute role="admin"><AdminCoupons /></ProtectedRoute>} />
+        <Route path="/admin/shipping"            element={<ProtectedRoute role="admin"><AdminShipping /></ProtectedRoute>} />
+        <Route path="/admin/refunds"             element={<ProtectedRoute role="admin"><AdminRefunds /></ProtectedRoute>} />
+        <Route path="/admin/audit"               element={<ProtectedRoute role="admin"><AdminAuditLog /></ProtectedRoute>} />
 
         {/* ── 404 ── */}
         <Route path="*"                          element={<NotFound />} />
