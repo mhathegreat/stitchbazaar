@@ -40,7 +40,7 @@ export default function VendorOrders() {
     const params = filter !== 'all' ? { status: filter } : {}
     vendorsApi.orders(params)
       .then(d => setOrders(d.data || []))
-      .catch(() => {})
+      .catch(() => toast.error('Failed to load orders'))
       .finally(() => setLoading(false))
   }, [filter])
 
