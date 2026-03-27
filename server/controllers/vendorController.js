@@ -391,6 +391,28 @@ export async function updateVendorOrderStatus(req, res, next) {
     const updated = await prisma.orderItem.update({
       where: { id: req.params.itemId },
       data:  { vendorStatus: status },
+      include: { order: { select: { id: true } } },
+    })
+
+    // Sync overall order status from all items in this order
+    const allItems = await prisma.orderItem.findMany({
+      where:  { orderId: updated.order.id },
+      select: { vendorStatus: true },
+    })
+    const statuses = allItems.map(i => i.vendorStatus)
+    const allSame  = s => statuses.every(x => x === s)
+    const anySame  = s => statuses.some(x => x === s)
+
+    let orderStatus = 'pending'
+    if      (allSame('cancelled'))  orderStatus = 'cancelled'
+    else if (allSame('delivered'))  orderStatus = 'delivered'
+    else if (anySame('shipped'))    orderStatus = 'shipped'
+    else if (anySame('packed'))     orderStatus = 'packed'
+    else if (anySame('confirmed'))  orderStatus = 'confirmed'
+
+    await prisma.order.update({
+      where: { id: updated.order.id },
+      data:  { status: orderStatus },
     })
 
     res.json({ success: true, data: updated })
