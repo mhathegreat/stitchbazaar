@@ -1,12 +1,11 @@
 /**
- * Register page
- * Customer or Vendor registration.
- * Role toggle (Customer / Vendor) at the top.
+ * Register page — Customer accounts only.
+ * Vendor registration is handled separately via /vendor/register.
  */
 
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, UserPlus, ShoppingBag, Store } from 'lucide-react'
+import { Eye, EyeOff, UserPlus, ShoppingBag, Heart, Package } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 import api from '../../api/client.js'
@@ -20,7 +19,6 @@ export default function Register() {
   const { login } = useAuth()
   const navigate   = useNavigate()
 
-  const [role,    setRole]    = useState('customer')
   const [show,    setShow]    = useState(false)
   const [loading, setLoading] = useState(false)
   const [errors,  setErrors]  = useState({})
@@ -35,22 +33,16 @@ export default function Register() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-
-    // Basic client-side check
     if (form.password.length < 8) {
       setErrors(er => ({ ...er, password: 'Password must be at least 8 characters' }))
       return
     }
-
     setLoading(true)
     try {
-      await api.post('/auth/register', { ...form, role })
-      // Auto-login after register
-      const user = await login(form.email, form.password)
-      toast.success(`Account created! Welcome, ${user.name.split(' ')[0]}!`)
-
-      if (role === 'vendor') navigate('/vendor/register', { replace: true })
-      else navigate('/', { replace: true })
+      await api.post('/auth/register', { ...form, role: 'customer' })
+      await login(form.email, form.password)
+      toast.success(`Welcome to StitchBazaar, ${form.name.split(' ')[0]}!`)
+      navigate('/', { replace: true })
     } catch (err) {
       const msg          = err?.response?.data?.message || 'Registration failed.'
       const serverErrors = err?.response?.data?.errors  || []
@@ -87,22 +79,18 @@ export default function Register() {
               Pakistan's marketplace for knitting,<br />stitching & haberdashery supplies.
             </p>
 
-            {/* Role highlight cards */}
             <div className="flex flex-col gap-3 text-left">
-              <div className="rounded-xl p-4 border" style={{ background: 'rgba(200,139,0,0.1)', borderColor: 'rgba(200,139,0,0.3)' }}>
-                <div className="flex items-center gap-2 mb-1">
-                  <ShoppingBag size={14} style={{ color: '#C88B00' }} />
-                  <span className="font-semibold text-sm" style={{ color: '#C88B00' }}>Customer</span>
+              {[
+                { icon: <ShoppingBag size={14} />, title: 'Browse thousands of products', color: '#C88B00' },
+                { icon: <Heart size={14} />,       title: 'Save favourites to your wishlist', color: '#D85A30' },
+                { icon: <Package size={14} />,     title: 'Track all your orders in one place', color: '#0F6E56' },
+              ].map((item, i) => (
+                <div key={i} className="rounded-xl p-3 border flex items-center gap-3"
+                  style={{ background: 'rgba(255,252,245,0.06)', borderColor: 'rgba(200,139,0,0.2)' }}>
+                  <span style={{ color: item.color }}>{item.icon}</span>
+                  <span className="text-xs" style={{ color: '#C8B89A' }}>{item.title}</span>
                 </div>
-                <p className="text-xs" style={{ color: '#C8B89A' }}>Browse, buy, track orders & save favourites.</p>
-              </div>
-              <div className="rounded-xl p-4 border" style={{ background: 'rgba(216,90,48,0.1)', borderColor: 'rgba(216,90,48,0.3)' }}>
-                <div className="flex items-center gap-2 mb-1">
-                  <Store size={14} style={{ color: '#D85A30' }} />
-                  <span className="font-semibold text-sm" style={{ color: '#D85A30' }}>Vendor</span>
-                </div>
-                <p className="text-xs" style={{ color: '#C8B89A' }}>Open your shop and reach customers across Pakistan.</p>
-              </div>
+              ))}
             </div>
           </div>
         </div>
@@ -125,31 +113,10 @@ export default function Register() {
 
             <div className="rounded-2xl p-8" style={{ background: '#FFF8E7', border: '2px solid rgba(200,139,0,0.2)', boxShadow: '0 4px 24px rgba(200,139,0,0.1)' }}>
               <h1 className="font-serif font-bold text-2xl mb-1" style={{ color: '#1C0A00' }}>Create Account</h1>
-              <p className="text-sm mb-5" style={{ color: '#7A6050' }}>
+              <p className="text-sm mb-6" style={{ color: '#7A6050' }}>
                 Already have an account?{' '}
                 <Link to="/login" className="font-semibold hover:underline" style={{ color: '#D85A30' }}>Sign in</Link>
               </p>
-
-              {/* Role toggle */}
-              <div className="flex gap-2 p-1 rounded-xl mb-5" style={{ background: 'rgba(200,139,0,0.12)' }}>
-                {[
-                  { value: 'customer', icon: <ShoppingBag size={14} />, label: 'Customer' },
-                  { value: 'vendor',   icon: <Store size={14} />,       label: 'Vendor'   },
-                ].map(r => (
-                  <button
-                    key={r.value}
-                    type="button"
-                    onClick={() => setRole(r.value)}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition-all"
-                    style={role === r.value
-                      ? { background: r.value === 'customer' ? '#C88B00' : '#D85A30', color: r.value === 'customer' ? '#1C0A00' : '#FFFCF5' }
-                      : { color: '#7A6050' }
-                    }
-                  >
-                    {r.icon} {r.label}
-                  </button>
-                ))}
-              </div>
 
               <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
                 {/* Name */}
@@ -213,7 +180,6 @@ export default function Register() {
                     </button>
                   </div>
                   {errors.password && <p className="text-xs mt-1" style={{ color: '#D85A30' }}>{errors.password}</p>}
-                  {/* Strength indicator */}
                   {form.password && (
                     <div className="flex gap-1 mt-2">
                       {[1,2,3,4].map(n => (
@@ -226,12 +192,6 @@ export default function Register() {
                     </div>
                   )}
                 </div>
-
-                {role === 'vendor' && (
-                  <div className="rounded-xl p-3 text-xs" style={{ background: 'rgba(15,110,86,0.1)', color: '#0F6E56', border: '1px solid rgba(15,110,86,0.2)' }}>
-                    After registering, you'll set up your shop details. Your shop will be reviewed and approved by our team before going live.
-                  </div>
-                )}
 
                 <button type="submit" disabled={loading}
                   className="btn-primary w-full py-3 rounded-xl font-bold mt-1 disabled:opacity-60">

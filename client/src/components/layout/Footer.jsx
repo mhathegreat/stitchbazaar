@@ -7,7 +7,7 @@
 import { Link } from 'react-router-dom'
 import BeadDots from '../mosaic/BeadDots.jsx'
 import DiamondMotif from '../mosaic/DiamondMotif.jsx'
-import { MessageCircle, Mail, MapPin } from 'lucide-react'
+import { MessageCircle, Mail, MapPin, Store } from 'lucide-react'
 
 const SHOP_LINKS = [
   { to: '/products',    label: 'All Products'   },
@@ -24,8 +24,9 @@ const ACCOUNT_LINKS = [
 ]
 
 const VENDOR_LINKS = [
-  { to: '/vendor/register',  label: 'Register Shop'   },
-  { to: '/vendor/dashboard', label: 'Vendor Dashboard'},
+  { to: '/vendor/register',  label: 'Register Your Shop' },
+  { to: '/vendor/dashboard', label: 'Vendor Dashboard'   },
+  { to: '/vendor/register',  label: 'How It Works'       },
 ]
 
 export default function Footer() {
@@ -59,6 +60,32 @@ export default function Footer() {
             Pakistan's marketplace for knitting, stitching &amp; craft supplies.
             Supporting local artisan shops since 2025.
           </p>
+        </div>
+
+        {/* ── Sell on StitchBazaar CTA ─────────────────── */}
+        <div className="rounded-2xl p-6 mb-12 flex flex-col sm:flex-row items-center justify-between gap-4"
+          style={{ background: 'rgba(200,139,0,0.08)', border: '1px solid rgba(200,139,0,0.25)' }}>
+          <div className="flex items-center gap-4">
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: 'rgba(200,139,0,0.15)' }}>
+              <Store size={20} style={{ color: '#C88B00' }} />
+            </div>
+            <div>
+              <p className="font-serif font-bold text-base" style={{ color: '#C88B00' }}>
+                Sell on StitchBazaar
+              </p>
+              <p className="text-xs mt-0.5" style={{ color: '#A89070' }}>
+                Reach craft lovers across Pakistan — open your shop for free
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/vendor/register"
+            className="flex-shrink-0 px-5 py-2.5 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
+            style={{ background: '#C88B00', color: '#1C0A00' }}
+          >
+            Open Your Shop →
+          </Link>
         </div>
 
         {/* ── Link columns ─────────────────────────────── */}
