@@ -33,7 +33,7 @@ function Field({ label, children, required }) {
 }
 
 export default function CustomerProfile() {
-  const { user, logout } = useAuth()
+  const { user, logout, refresh } = useAuth()
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
     name:    user?.name    || '',
@@ -51,6 +51,7 @@ export default function CustomerProfile() {
     setSaving(true)
     try {
       await authApi.updateProfile({ name: form.name, phone: form.phone, address: form.address, city: form.city })
+      await refresh()
       toast.success('Profile updated!')
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Update failed')

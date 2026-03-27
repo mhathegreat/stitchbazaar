@@ -5,6 +5,7 @@ import { generalLimiter } from '../middleware/rateLimiter.js'
 import {
   listVendors, getVendor, registerVendor, updateVendorProfile,
   getVendorDashboard, requestPayout, getVendorEarnings, getVendorOrders,
+  updateVendorOrderStatus,
 } from '../controllers/vendorController.js'
 
 const router = Router()
@@ -20,7 +21,8 @@ router.put('/profile',         requireAuth, requireRole('vendor'), updateVendorP
 router.get('/dashboard',       requireAuth, requireRole('vendor'), getVendorDashboard)
 router.get('/earnings',        requireAuth, requireRole('vendor'), getVendorEarnings)
 router.get('/orders',          requireAuth, requireRole('vendor'), getVendorOrders)
-router.post('/payout-request', requireAuth, requireRole('vendor'), requestPayout)
+router.post('/payout-request',              requireAuth, requireRole('vendor'), requestPayout)
+router.put('/orders/:itemId/status',       requireAuth, requireRole('vendor'), updateVendorOrderStatus)
 
 // ── Public vendor storefront — must be LAST so named routes win ───
 router.get('/:id', getVendor)

@@ -349,3 +349,35 @@ export async function getVendorOrders(req, res, next) {
     next(err)
   }
 }
+
+const VALID_VENDOR_STATUSES = ['confirmed', 'packed', 'shipped', 'delivered', 'cancelled']
+
+export async function updateVendorOrderStatus(req, res, next) {
+  try {
+    const { status } = req.body || {}
+    if (!VALID_VENDOR_STATUSES.includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status' })
+    }
+
+    const vendor = await prisma.vendor.findUnique({ where: { userId: req.user.id } })
+    if (!vendor) {
+      return res.status(404).json({ success: false, message: 'Vendor profile not found' })
+    }
+
+    const item = await prisma.orderItem.findFirst({
+      where: { id: req.params.itemId, vendorId: vendor.id },
+    })
+    if (!item) {
+      return res.status(404).json({ success: false, message: 'Order item not found' })
+    }
+
+    const updated = await prisma.orderItem.update({
+      where: { id: req.params.itemId },
+      data:  { vendorStatus: status },
+    })
+
+    res.json({ success: true, data: updated })
+  } catch (err) {
+    next(err)
+  }
+}

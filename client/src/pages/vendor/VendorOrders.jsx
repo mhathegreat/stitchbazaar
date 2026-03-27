@@ -8,7 +8,6 @@ import { Package, ShoppingBag, DollarSign, Store, CheckCircle, Truck, Clock, XCi
 import PageWrapper from '../../components/layout/PageWrapper.jsx'
 import { formatPrice } from '../../styles/theme.js'
 import { vendorsApi } from '../../api/vendors.js'
-import { ordersApi } from '../../api/orders.js'
 import toast from 'react-hot-toast'
 
 const VENDOR_NAV = [
@@ -58,11 +57,11 @@ export default function VendorOrders() {
     total:    item.unitPrice * item.quantity,
   }))
 
-  async function advanceStatus(orderId, itemId, currentStatus) {
+  async function advanceStatus(itemId, currentStatus) {
     const next = NEXT_STATUS[currentStatus]
     if (!next) return
     try {
-      await ordersApi.updateStatus(orderId, next)
+      await vendorsApi.updateOrderStatus(itemId, next)
       setOrders(os => os.map(o => o.id === itemId ? { ...o, vendorStatus: next } : o))
       toast.success(`Order moved to ${STATUS_CONFIG[next].label}`)
     } catch { toast.error('Could not update status') }
@@ -166,7 +165,7 @@ export default function VendorOrders() {
                         {sc.icon} {sc.label}
                       </span>
                       {next && (
-                        <button onClick={() => advanceStatus(order.id, order._itemId, order.status)}
+                        <button onClick={() => advanceStatus(order._itemId, order.status)}
                           className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all hover:-translate-y-0.5"
                           style={{ background: STATUS_CONFIG[next].color, color: '#FFFCF5' }}>
                           Mark as {STATUS_CONFIG[next].label}

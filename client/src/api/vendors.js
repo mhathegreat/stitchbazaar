@@ -27,4 +27,7 @@ export const vendorsApi = {
 
   requestPayout: () =>
     api.post('/vendors/payout-request').then(r => r.data),
+
+  updateOrderStatus: (itemId, status) =>
+    api.put(`/vendors/orders/${itemId}/status`, { status }).then(r => r.data),
 }
