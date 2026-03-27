@@ -19,10 +19,12 @@ const VENDOR_NAV = [
 ]
 
 const STATUS_COLORS = {
-  active:   { color: '#0F6E56', bg: 'rgba(15,110,86,0.1)',  label: 'Active'   },
-  inactive: { color: '#7A6050', bg: 'rgba(122,96,80,0.1)',  label: 'Inactive' },
-  draft:    { color: '#C88B00', bg: 'rgba(200,139,0,0.1)',  label: 'Draft'    },
+  active:    { color: '#0F6E56', bg: 'rgba(15,110,86,0.1)',   label: 'Active'    },
+  inactive:  { color: '#7A6050', bg: 'rgba(122,96,80,0.1)',   label: 'Inactive'  },
+  suspended: { color: '#D85A30', bg: 'rgba(216,90,48,0.1)',   label: 'Suspended' },
+  draft:     { color: '#C88B00', bg: 'rgba(200,139,0,0.1)',   label: 'Draft'     },
 }
+const DEFAULT_SC = { color: '#7A6050', bg: 'rgba(122,96,80,0.1)', label: 'Unknown' }
 
 export default function VendorProducts() {
   const [products,     setProducts]     = useState([])
@@ -169,7 +171,7 @@ export default function VendorProducts() {
                       </td>
                     </tr>
                   ) : filtered.map((p, i) => {
-                    const sc = STATUS_COLORS[p.status]
+                    const sc = STATUS_COLORS[p.status] || DEFAULT_SC
                     return (
                       <tr key={p.id} style={{ borderTop: i > 0 ? '1px solid rgba(200,139,0,0.1)' : undefined }}>
                         <td className="px-4 py-3">

@@ -13,14 +13,14 @@ import { pushToRole, pushToUser } from '../utils/sse.js'
 // ── Schemas ──────────────────────────────────────────────────────
 
 const orderItemSchema = z.object({
-  productId: z.string().cuid(),
-  variantId: z.string().cuid().optional(),
+  productId: z.string().min(1),            // Prisma ID — no strict cuid() to avoid stale-cache failures
+  variantId: z.string().min(1).optional(), // optional variant
   quantity:  z.number().int().positive(),
 })
 
 export const createOrderSchema = z.object({
   items:           z.array(orderItemSchema).min(1),
-  deliveryAddress: z.string().min(5).max(500),
+  deliveryAddress: z.string().min(3).max(500),
   city:            z.string().min(2).max(80),
   notes:           z.string().max(500).optional(),
   paymentMethod:   z.enum(['cash_on_delivery', 'bank_transfer']).default('cash_on_delivery'),

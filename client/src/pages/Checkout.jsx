@@ -84,10 +84,11 @@ export default function Checkout() {
 
   function validate() {
     const errs = {}
-    if (!form.name.trim())    errs.name    = 'Name is required'
-    if (!form.phone.trim())   errs.phone   = 'Phone number is required'
-    if (!form.address.trim()) errs.address = 'Delivery address is required'
-    if (!form.city)           errs.city    = 'Please select a city'
+    if (!form.name.trim())              errs.name    = 'Name is required'
+    if (!form.phone.trim())             errs.phone   = 'Phone number is required'
+    if (!form.address.trim())           errs.address = 'Delivery address is required'
+    else if (form.address.trim().length < 5) errs.address = 'Address must be at least 5 characters'
+    if (!form.city)                     errs.city    = 'Please select a city'
     setErrors(errs)
     return Object.keys(errs).length === 0
   }
@@ -117,8 +118,20 @@ export default function Checkout() {
         state: { order: data.data, customerName: form.name, customerPhone: form.phone },
       })
     } catch (err) {
-      const msg = err?.response?.data?.message || 'Order failed. Please try again.'
-      toast.error(msg)
+      const data = err?.response?.data
+      if (data?.errors) {
+        // Zod field errors — show the first one and highlight the field
+        const fieldErrors = data.errors
+        const newErrs = {}
+        if (fieldErrors.deliveryAddress) newErrs.address = fieldErrors.deliveryAddress[0]
+        if (fieldErrors.city)            newErrs.city    = fieldErrors.city[0]
+        if (fieldErrors.items)           newErrs.items   = fieldErrors.items[0]
+        if (Object.keys(newErrs).length) setErrors(newErrs)
+        const firstMsg = Object.values(fieldErrors).flat()[0]
+        toast.error(firstMsg || 'Please check your order details')
+      } else {
+        toast.error(data?.message || 'Order failed. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
