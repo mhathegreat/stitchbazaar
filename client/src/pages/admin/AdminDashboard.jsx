@@ -25,17 +25,20 @@ export default function AdminDashboard() {
   const [loading,     setLoading]     = useState(true)
 
   useEffect(() => {
-    Promise.all([adminApi.dashboard(), adminApi.analytics()])
-      .then(([dash, analytics]) => {
+    adminApi.dashboard()
+      .then(dash => {
         const d = dash.data
         setStats(d.stats)
-        setVendors(d.pendingVendors  || [])
-        setPayouts(d.pendingPayouts  || [])
-        setDisputes(d.openDisputes   || [])
-        setTopProducts(analytics.data?.topProducts || [])
+        setVendors(d.pendingVendors || [])
+        setPayouts(d.pendingPayouts || [])
+        setDisputes(d.openDisputes  || [])
       })
       .catch(() => toast.error('Failed to load dashboard data'))
       .finally(() => setLoading(false))
+
+    adminApi.analytics()
+      .then(analytics => setTopProducts(analytics.data?.topProducts || []))
+      .catch(() => {}) // analytics failing silently — not critical
   }, [])
 
   async function approveVendor(id) {
