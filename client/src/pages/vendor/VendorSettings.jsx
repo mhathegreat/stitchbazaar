@@ -2,12 +2,13 @@
  * Vendor Settings — /vendor/settings
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Package, ShoppingBag, DollarSign, Store, Save, Camera, Palette, LayoutDashboard } from 'lucide-react'
 import PageWrapper from '../../components/layout/PageWrapper.jsx'
 import { vendorsApi } from '../../api/vendors.js'
 import { authApi } from '../../api/auth.js'
+import api from '../../api/client.js'
 import { useAuth } from '../../context/AuthContext.jsx'
 import toast from 'react-hot-toast'
 
@@ -52,6 +53,9 @@ export default function VendorSettings() {
   const { user } = useAuth()
   const [tab, setTab] = useState('shop')
   const [saving, setSaving] = useState(false)
+  const [logoUrl, setLogoUrl] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const logoInputRef = useRef(null)
 
   const [shop, setShop] = useState({
     shopName:        '',
@@ -78,6 +82,7 @@ export default function VendorSettings() {
       .then(d => {
         if (!d.data?.vendor) return
         const v = d.data.vendor
+        setLogoUrl(v.logo || '')
         setShop({
           shopName:        v.shopName        || '',
           shopDescription: v.shopDescription || '',
@@ -93,6 +98,29 @@ export default function VendorSettings() {
       })
       .catch(() => {})
   }, [])
+
+  async function handleLogoUpload(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) { toast.error('Image must be under 2MB'); return }
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('image', file)
+      const { data } = await api.post('/upload?folder=logos', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      const url = data.data?.url || data.url
+      setLogoUrl(url)
+      await vendorsApi.updateProfile({ logo: url })
+      toast.success('Logo uploaded!')
+    } catch {
+      toast.error('Upload failed')
+    } finally {
+      setUploading(false)
+      e.target.value = ''
+    }
+  }
 
   async function handleSave() {
     setSaving(true)
@@ -167,19 +195,28 @@ export default function VendorSettings() {
             {/* Shop Info Tab */}
             {tab === 'shop' && (
               <div className="flex flex-col gap-5">
-                {/* Logo upload placeholder */}
+                {/* Logo upload */}
                 <div className="flex items-center gap-4">
-                  <div className="w-20 h-20 rounded-xl flex items-center justify-center text-3xl"
+                  <div className="w-20 h-20 rounded-xl overflow-hidden flex items-center justify-center text-3xl shrink-0"
                     style={{ background: shop.colorTheme + '20', border: `2px solid ${shop.colorTheme}40` }}>
-                    🧶
+                    {logoUrl
+                      ? <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                      : <span>🧶</span>}
                   </div>
                   <div>
-                    <button className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all"
-                      style={{ background: 'rgba(200,139,0,0.1)', color: '#C88B00' }}
-                      onClick={() => toast('Image upload requires Cloudinary setup')}>
-                      <Camera size={13} /> Upload Logo
+                    <button type="button"
+                      onClick={() => logoInputRef.current?.click()}
+                      disabled={uploading}
+                      className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all disabled:opacity-60"
+                      style={{ background: 'rgba(200,139,0,0.1)', color: '#C88B00' }}>
+                      {uploading
+                        ? <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        : <Camera size={13} />}
+                      {uploading ? 'Uploading…' : 'Upload Logo'}
                     </button>
                     <p className="text-[10px] mt-1" style={{ color: '#7A6050' }}>JPG or PNG, max 2MB</p>
+                    <input ref={logoInputRef} type="file" accept="image/jpeg,image/png,image/webp"
+                      className="hidden" onChange={handleLogoUpload} />
                   </div>
                 </div>
 
