@@ -129,7 +129,7 @@ export async function approveVendor(req, res, next) {
 
 export async function rejectVendor(req, res, next) {
   try {
-    const { note } = req.body
+    const { note } = req.body || {}
     const vendor = await prisma.vendor.update({
       where:   { id: req.params.id },
       data:    { status: 'suspended' },
