@@ -110,7 +110,7 @@ export default function AdminOrders() {
                         style={{ background: sc.bg, color: sc.color }}>{o.status}</span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <Link to={`/orders/${o.id}`}
+                      <Link to={`/customer/orders/${o.id}`}
                         className="p-1.5 rounded-lg hover:bg-amber-100 inline-block" style={{ color: '#457B9D' }}>
                         <Eye size={14} />
                       </Link>
