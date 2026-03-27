@@ -127,7 +127,7 @@ export default function AdminOrders() {
                         style={{ background: sc.bg, color: sc.color }}>{o.status}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-1.5 justify-end">
+                      <div className="flex items-center gap-1.5 justify-end flex-wrap">
                         <select
                           value={o.status}
                           disabled={updating === o.id}

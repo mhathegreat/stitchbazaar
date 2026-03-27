@@ -64,7 +64,7 @@ export function useNotifications() {
         return {
           icon:    '🛍️',
           title:   'New Order',
-          message: `New order from ${payload.customer} — Rs. ${((payload.total || 0) / 100).toLocaleString()}`,
+          message: `New order — ${payload.customer || 'Customer'} (Rs. ${((payload.total||0)/100).toLocaleString()})`,
           link:    '/vendor/orders',
         }
       case 'order_status':
@@ -73,6 +73,20 @@ export function useNotifications() {
           title:   'Order Updated',
           message: `Your order status changed to ${payload.status}`,
           link:    `/customer/orders/${payload.orderId}`,
+        }
+      case 'vendor_approved':
+        return {
+          icon:    '🎉',
+          title:   'Shop Approved!',
+          message: `Your shop "${payload.shopName}" has been approved!`,
+          link:    '/vendor/dashboard',
+        }
+      case 'vendor_rejected':
+        return {
+          icon:    '⚠️',
+          title:   'Application Update',
+          message: `Your shop application needs attention.`,
+          link:    '/vendor/dashboard',
         }
       default:
         return null

@@ -367,6 +367,43 @@ export async function getVendorOrders(req, res, next) {
   }
 }
 
+/**
+ * GET /api/v1/vendors/disputes
+ * Returns disputes on orders that contain items from this vendor.
+ */
+export async function getVendorDisputes(req, res, next) {
+  try {
+    const vendor = await prisma.vendor.findUnique({ where: { userId: req.user.id } })
+    if (!vendor) return res.status(404).json({ success: false, message: 'Vendor not found' })
+
+    // Find orders that have items belonging to this vendor
+    const orderIds = await prisma.orderItem.findMany({
+      where:  { vendorId: vendor.id },
+      select: { orderId: true },
+      distinct: ['orderId'],
+    })
+    const ids = orderIds.map(o => o.orderId)
+
+    const disputes = await prisma.dispute.findMany({
+      where:   { orderId: { in: ids } },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        order: {
+          select: {
+            id: true, totalAmount: true, createdAt: true,
+            customer: { select: { name: true, email: true } },
+            guestName: true, guestEmail: true,
+          },
+        },
+      },
+    })
+
+    res.json({ success: true, data: disputes })
+  } catch (err) {
+    next(err)
+  }
+}
+
 const VALID_VENDOR_STATUSES = ['confirmed', 'packed', 'shipped', 'delivered', 'cancelled']
 
 export async function updateVendorOrderStatus(req, res, next) {

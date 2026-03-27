@@ -37,6 +37,7 @@ export default function VendorDashboard() {
   const [vendor,         setVendor]         = useState(null)
   const [stats,          setStats]          = useState(null)
   const [recentOrders,   setRecentOrders]   = useState([])
+  const [disputes,       setDisputes]       = useState([])
   const [payoutLoading,  setPayoutLoading]  = useState(false)
 
   useEffect(() => {
@@ -47,17 +48,24 @@ export default function VendorDashboard() {
         setRecentOrders(d.data.recentOrders || [])
       })
       .catch(() => toast.error('Failed to load dashboard'))
+
+    vendorsApi.disputes()
+      .then(d => setDisputes(d.data || []))
+      .catch(() => {}) // non-critical, fail silently
   }, [])
 
   const filtered = activeTab === 'all'
     ? recentOrders
     : recentOrders.filter(o => o.vendorStatus === activeTab || o.status === activeTab)
 
+  const openDisputes = disputes.filter(d => d.status === 'open' || d.status === 'investigating').length
+
   const statCards = stats ? [
     { label: 'Total Products', value: stats.totalProducts,           icon: <Package size={20} />,     color: '#C88B00', bg: 'rgba(200,139,0,0.1)'  },
     { label: 'Total Orders',   value: stats.totalOrders,             icon: <ShoppingBag size={20} />, color: '#D85A30', bg: 'rgba(216,90,48,0.1)'  },
     { label: 'Total Earnings', value: formatPrice(stats.netRevenue), icon: <DollarSign size={20} />,  color: '#0F6E56', bg: 'rgba(15,110,86,0.1)'  },
     { label: 'Pending Payout', value: formatPrice(stats.pendingPayout), icon: <TrendingUp size={20} />, color: '#6A4C93', bg: 'rgba(106,76,147,0.1)' },
+    ...(openDisputes > 0 ? [{ label: 'Open Disputes', value: openDisputes, icon: <AlertCircle size={20} />, color: '#D85A30', bg: 'rgba(216,90,48,0.1)' }] : []),
   ] : []
 
   return (
@@ -89,7 +97,7 @@ export default function VendorDashboard() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
           {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
             {statCards.map((s, i) => (
               <div key={i} className="rounded-xl p-5 mosaic-block" style={{ background: '#FFF8E7' }}>
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
@@ -158,9 +166,47 @@ export default function VendorDashboard() {
                   )
                 })}
               </div>
+
+              {/* Disputes section */}
+              {disputes.length > 0 && (
+                <div className="mt-6">
+                  <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                    <h2 className="font-serif font-bold text-base flex items-center gap-2" style={{ color: '#D85A30' }}>
+                      <AlertCircle size={16} /> Open Disputes ({disputes.length})
+                    </h2>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {disputes.map(d => {
+                      const customerName = d.order?.customer?.name || d.order?.guestName || 'Customer'
+                      const isOpen = d.status === 'open' || d.status === 'investigating'
+                      return (
+                        <div key={d.id} className="flex items-center gap-3 p-4 rounded-xl"
+                          style={{ background: '#FFF8E7', border: '1.5px solid rgba(216,90,48,0.2)' }}>
+                          <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                            style={{ background: 'rgba(216,90,48,0.1)', color: '#D85A30' }}>
+                            <AlertCircle size={16} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm truncate" style={{ color: '#1C0A00' }}>
+                              {d.reason || 'Dispute raised'}
+                            </p>
+                            <p className="text-xs" style={{ color: '#7A6050' }}>
+                              {customerName} · Order #{(d.order?.id || '').slice(-8).toUpperCase()}
+                            </p>
+                          </div>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize shrink-0"
+                            style={{ background: isOpen ? 'rgba(216,90,48,0.1)' : 'rgba(15,110,86,0.1)', color: isOpen ? '#D85A30' : '#0F6E56' }}>
+                            {d.status}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Quick Actions */}
+            {/* Quick Actions & Disputes */}
             <div>
               <BrushstrokeHeading as="h2" align="left" beads={false} className="mb-4">
                 <span style={{ color: '#1C0A00' }}>Quick</span>{' '}

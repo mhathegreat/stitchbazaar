@@ -30,4 +30,6 @@ export const vendorsApi = {
 
   updateOrderStatus: (itemId, status) =>
     api.put(`/vendors/orders/${itemId}/status`, { status }).then(r => r.data),
+
+  disputes: () => api.get('/vendors/disputes').then(r => r.data),
 }

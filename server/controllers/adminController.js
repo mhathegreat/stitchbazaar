@@ -8,6 +8,7 @@ import prisma from '../utils/prisma.js'
 import { logger } from '../utils/logger.js'
 import { sendVendorDecision, sendPayoutNotification, sendDisputeResolution } from '../utils/email.js'
 import { audit } from '../utils/audit.js'
+import { pushToUser, pushToRole } from '../utils/sse.js'
 
 // ── Schemas ──────────────────────────────────────────────────────
 
@@ -122,6 +123,8 @@ export async function approveVendor(req, res, next) {
     sendVendorDecision({ to: vendor.user.email, shopName: vendor.shopName, approved: true })
       .catch(e => logger.warn(`Vendor approval email failed: ${e.message}`))
 
+    pushToUser(vendor.userId, { type: 'vendor_approved', payload: { shopName: vendor.shopName } })
+
     res.json({ success: true, message: 'Vendor approved', data: vendor })
   } catch (err) {
     next(err)
@@ -141,6 +144,8 @@ export async function rejectVendor(req, res, next) {
 
     sendVendorDecision({ to: vendor.user.email, shopName: vendor.shopName, approved: false, note })
       .catch(e => logger.warn(`Vendor rejection email failed: ${e.message}`))
+
+    pushToUser(vendor.userId, { type: 'vendor_rejected', payload: { shopName: vendor.shopName, note } })
 
     res.json({ success: true, message: 'Vendor rejected', data: vendor })
   } catch (err) {
