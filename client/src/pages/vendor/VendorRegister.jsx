@@ -97,25 +97,6 @@ export default function VendorRegister() {
     }
   }
 
-  // ── Input helper
-  function Field({ label, name, value, onChange, placeholder, type = 'text', error, hint, required }) {
-    return (
-      <div>
-        <label className="block text-sm font-medium mb-1.5" style={{ color: '#1C0A00' }}>
-          {label} {required && <span style={{ color: '#D85A30' }}>*</span>}
-        </label>
-        <input type={type} name={name} value={value} onChange={onChange} placeholder={placeholder}
-          className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
-          style={{ background: '#FFFCF5', border: `2px solid ${error ? '#D85A30' : 'rgba(200,139,0,0.3)'}`, color: '#1C0A00' }}
-          onFocus={e => e.target.style.borderColor = '#C88B00'}
-          onBlur={e => e.target.style.borderColor = error ? '#D85A30' : 'rgba(200,139,0,0.3)'}
-        />
-        {error && <p className="text-xs mt-1" style={{ color: '#D85A30' }}>{error}</p>}
-        {hint && !error && <p className="text-xs mt-1" style={{ color: '#A07000' }}>{hint}</p>}
-      </div>
-    )
-  }
-
   if (step === 3) {
     return (
       <PageWrapper title="Shop Submitted">
@@ -337,6 +318,26 @@ export default function VendorRegister() {
         </div>
       </div>
     </PageWrapper>
+  )
+}
+
+// Defined outside VendorRegister so React doesn't treat it as a new component
+// type on every render (which would unmount/remount the input and lose focus).
+function Field({ label, name, value, onChange, placeholder, type = 'text', error, hint, required }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium mb-1.5" style={{ color: '#1C0A00' }}>
+        {label} {required && <span style={{ color: '#D85A30' }}>*</span>}
+      </label>
+      <input type={type} name={name} value={value} onChange={onChange} placeholder={placeholder}
+        className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
+        style={{ background: '#FFFCF5', border: `2px solid ${error ? '#D85A30' : 'rgba(200,139,0,0.3)'}`, color: '#1C0A00' }}
+        onFocus={e => e.target.style.borderColor = '#C88B00'}
+        onBlur={e => e.target.style.borderColor = error ? '#D85A30' : 'rgba(200,139,0,0.3)'}
+      />
+      {error && <p className="text-xs mt-1" style={{ color: '#D85A30' }}>{error}</p>}
+      {hint && !error && <p className="text-xs mt-1" style={{ color: '#A07000' }}>{hint}</p>}
+    </div>
   )
 }
 
