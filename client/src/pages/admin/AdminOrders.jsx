@@ -19,18 +19,8 @@ const STATUS_COLORS = {
   disputed:  { color: '#D85A30', bg: 'rgba(216,90,48,0.1)'  },
 }
 
-const MOCK_ORDERS = [
-  { id: 'ord_abc123', customer: { name: 'Ayesha Khan'   }, city: 'Lahore',    totalAmount: 378000, status: 'pending',   createdAt: '2026-03-26', items: 2 },
-  { id: 'ord_def456', customer: { name: 'Fatima Malik'  }, city: 'Karachi',   totalAmount: 120000, status: 'shipped',   createdAt: '2026-03-25', items: 1 },
-  { id: 'ord_ghi789', customer: { name: 'Sara Ahmed'    }, city: 'Islamabad', totalAmount: 650000, status: 'delivered', createdAt: '2026-03-24', items: 3 },
-  { id: 'ord_jkl012', customer: { name: 'Zara Hussain'  }, city: 'Multan',    totalAmount: 255000, status: 'confirmed', createdAt: '2026-03-23', items: 1 },
-  { id: 'ord_mno345', customer: { name: 'Nadia Rehman'  }, city: 'Faisalabad',totalAmount:  90000, status: 'cancelled', createdAt: '2026-03-22', items: 2 },
-  { id: 'ord_pqr678', customer: null,                       city: 'Lahore',    totalAmount: 450000, status: 'pending',   createdAt: '2026-03-21', items: 1, guestName: 'Guest User' },
-  { id: 'ord_stu901', customer: { name: 'Hina Baig'     }, city: 'Peshawar',  totalAmount: 189000, status: 'disputed',  createdAt: '2026-03-20', items: 1 },
-]
-
 export default function AdminOrders() {
-  const [orders,  setOrders]  = useState(MOCK_ORDERS)
+  const [orders,  setOrders]  = useState([])
   const [loading, setLoading] = useState(true)
   const [filter,  setFilter]  = useState('all')
   const [meta,    setMeta]    = useState({})
@@ -120,7 +110,7 @@ export default function AdminOrders() {
                         style={{ background: sc.bg, color: sc.color }}>{o.status}</span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <Link to={`/customer/orders/${o.id}`}
+                      <Link to={`/orders/${o.id}`}
                         className="p-1.5 rounded-lg hover:bg-amber-100 inline-block" style={{ color: '#457B9D' }}>
                         <Eye size={14} />
                       </Link>

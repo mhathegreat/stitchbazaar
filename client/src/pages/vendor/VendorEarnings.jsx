@@ -18,13 +18,6 @@ const VENDOR_NAV = [
   { to: '/vendor/settings',  label: 'Settings',  icon: <Store size={16} />      },
 ]
 
-const MOCK_MONTHLY = [
-  { month: 'Jan 2026', gross: 5400000, orders: 47 },
-  { month: 'Feb 2026', gross: 7100000, orders: 63 },
-  { month: 'Mar 2026', gross: 8420000, orders: 74 },
-]
-const MOCK_PAYOUTS = []
-
 const PAYOUT_COLORS = {
   pending:    { color: '#C88B00', bg: 'rgba(200,139,0,0.1)',  label: 'Pending',    icon: <Clock size={12} />       },
   processing: { color: '#457B9D', bg: 'rgba(69,123,157,0.1)', label: 'Processing', icon: <Clock size={12} />       },
@@ -34,8 +27,8 @@ const PAYOUT_COLORS = {
 
 export default function VendorEarnings() {
   const [requesting, setRequesting] = useState(false)
-  const [monthly,    setMonthly]    = useState(MOCK_MONTHLY)
-  const [payouts,    setPayouts]    = useState(MOCK_PAYOUTS)
+  const [monthly,    setMonthly]    = useState([])
+  const [payouts,    setPayouts]    = useState([])
   const [commissionRate, setCommissionRate] = useState(10)
 
   useEffect(() => {

@@ -16,15 +16,8 @@ const STATUS_COLORS = {
   rejected:   { color: '#D85A30', bg: 'rgba(216,90,48,0.1)',  label: 'Rejected'   },
 }
 
-const MOCK_PAYOUTS = [
-  { id: 'pay_1', vendor: { shopName: 'CraftHub Lahore', bankAccountName: 'Ali Hassan', bankAccountNumber: '0123456789', bankName: 'HBL'         }, amount: 2700000, status: 'pending',    requestedAt: '2026-03-25' },
-  { id: 'pay_2', vendor: { shopName: 'Yarn Paradise',   bankAccountName: 'Sara Ahmed', bankAccountNumber: '9876543210', bankName: 'Meezan Bank' }, amount: 1800000, status: 'pending',    requestedAt: '2026-03-24' },
-  { id: 'pay_3', vendor: { shopName: 'Stitch Studio',   bankAccountName: 'Fatima M.',  bankAccountNumber: '1111222233', bankName: 'MCB Bank'    }, amount: 3200000, status: 'paid',       requestedAt: '2026-03-01' },
-  { id: 'pay_4', vendor: { shopName: 'CraftHub Lahore', bankAccountName: 'Ali Hassan', bankAccountNumber: '0123456789', bankName: 'HBL'         }, amount: 1500000, status: 'rejected',   requestedAt: '2026-02-15' },
-]
-
 export default function AdminPayouts() {
-  const [payouts, setPayouts] = useState(MOCK_PAYOUTS)
+  const [payouts, setPayouts] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter,  setFilter]  = useState('all')
 
@@ -43,7 +36,7 @@ export default function AdminPayouts() {
     try {
       await adminApi.processPayout(id, { status })
       setPayouts(ps => ps.map(p => p.id === id ? { ...p, status } : p))
-      toast[status === 'paid' ? 'success' : 'error'](`Payout marked as ${status}`)
+      toast.success(`Payout marked as ${status}`)
     } catch { toast.error('Action failed') }
   }
 

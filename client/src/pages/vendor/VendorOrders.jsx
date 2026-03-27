@@ -32,16 +32,8 @@ const NEXT_STATUS = {
   pending: 'confirmed', confirmed: 'packed', packed: 'shipped', shipped: 'delivered',
 }
 
-const MOCK_ORDERS = [
-  { id: 'ord_abc123', customer: 'Ayesha Khan',   phone: '03001234567', city: 'Lahore',    date: '2026-03-24', status: 'pending',   items: [{ name: 'Bamboo Needles Set', qty: 2 }], total: 378000 },
-  { id: 'ord_def456', customer: 'Fatima Malik',  phone: '03119876543', city: 'Karachi',   date: '2026-03-23', status: 'shipped',   items: [{ name: 'Merino Wool Yarn', qty: 1 }],   total: 120000 },
-  { id: 'ord_ghi789', customer: 'Sara Ahmed',    phone: '03451111222', city: 'Islamabad', date: '2026-03-22', status: 'delivered', items: [{ name: 'Crochet Hook Set', qty: 1 }],   total: 650000 },
-  { id: 'ord_jkl012', customer: 'Zara Hussain',  phone: '03217654321', city: 'Multan',    date: '2026-03-21', status: 'confirmed', items: [{ name: 'Linen Thread White', qty: 3 }], total: 255000 },
-  { id: 'ord_mno345', customer: 'Nadia Rehman',  phone: '03320001111', city: 'Faisalabad',date: '2026-03-20', status: 'cancelled', items: [{ name: 'Embroidery Hoop', qty: 2 }],    total:  90000 },
-]
-
 export default function VendorOrders() {
-  const [orders, setOrders] = useState(MOCK_ORDERS)
+  const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
 
@@ -106,10 +98,10 @@ export default function VendorOrders() {
           {/* Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
             {[
-              { label: 'Pending',   count: orders.filter(o => o.status === 'pending').length,   color: '#C88B00' },
-              { label: 'Shipped',   count: orders.filter(o => o.status === 'shipped').length,   color: '#2DC653' },
-              { label: 'Delivered', count: orders.filter(o => o.status === 'delivered').length, color: '#0F6E56' },
-              { label: 'Cancelled', count: orders.filter(o => o.status === 'cancelled').length, color: '#D85A30' },
+              { label: 'Pending',   count: filtered.filter(o => o.status === 'pending').length,   color: '#C88B00' },
+              { label: 'Shipped',   count: filtered.filter(o => o.status === 'shipped').length,   color: '#2DC653' },
+              { label: 'Delivered', count: filtered.filter(o => o.status === 'delivered').length, color: '#0F6E56' },
+              { label: 'Cancelled', count: filtered.filter(o => o.status === 'cancelled').length, color: '#D85A30' },
             ].map((s, i) => (
               <div key={i} className="rounded-xl p-3 text-center" style={{ background: '#FFF8E7', border: '2px solid rgba(200,139,0,0.15)' }}>
                 <p className="font-bold text-2xl font-serif" style={{ color: s.color }}>{s.count}</p>

@@ -17,15 +17,8 @@ const STATUS_COLORS = {
   closed:        { color: '#7A6050', bg: 'rgba(122,96,80,0.1)',  label: 'Closed'        },
 }
 
-const MOCK_DISPUTES = [
-  { id: 'dis_1', order: { id: 'ord_abc123', totalAmount: 378000 }, customer: { name: 'Ayesha Khan',   email: 'ayesha@email.com' }, reason: 'Item not received',              status: 'open',          createdAt: '2026-03-26' },
-  { id: 'dis_2', order: { id: 'ord_def456', totalAmount: 120000 }, customer: { name: 'Fatima Malik',  email: 'fatima@email.com' }, reason: 'Item received damaged',          status: 'investigating', createdAt: '2026-03-24' },
-  { id: 'dis_3', order: { id: 'ord_ghi789', totalAmount: 650000 }, customer: { name: 'Sara Ahmed',    email: 'sara@email.com'   }, reason: 'Wrong item received',            status: 'resolved',      createdAt: '2026-03-20' },
-  { id: 'dis_4', order: { id: 'ord_jkl012', totalAmount: 255000 }, customer: { name: 'Zara Hussain',  email: 'zara@email.com'   }, reason: 'Item does not match description',status: 'closed',        createdAt: '2026-03-18' },
-]
-
 export default function AdminDisputes() {
-  const [disputes, setDisputes] = useState(MOCK_DISPUTES)
+  const [disputes, setDisputes] = useState([])
   const [loading,  setLoading]  = useState(true)
   const [filter,   setFilter]   = useState('all')
 

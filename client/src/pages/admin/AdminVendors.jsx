@@ -15,16 +15,8 @@ const STATUS_COLORS = {
   suspended: { color: '#D85A30', bg: 'rgba(216,90,48,0.1)',  label: 'Suspended' },
 }
 
-const MOCK_VENDORS = [
-  { id: 'v1', shopName: 'CraftHub Lahore',   user: { name: 'Ali Hassan',   email: 'ali@crafthub.pk',  phone: '03001234567' }, city: 'Lahore',    status: 'active',    products: 48, createdAt: '2025-06-10' },
-  { id: 'v2', shopName: 'Yarn Paradise',     user: { name: 'Sara Ahmed',   email: 'sara@yarn.pk',     phone: '03119876543' }, city: 'Karachi',   status: 'active',    products: 32, createdAt: '2025-07-02' },
-  { id: 'v3', shopName: 'Stitch Studio',     user: { name: 'Fatima Malik', email: 'fatima@stitch.pk', phone: '03451111222' }, city: 'Islamabad', status: 'pending',   products: 0,  createdAt: '2026-03-25' },
-  { id: 'v4', shopName: 'The Knit Corner',   user: { name: 'Zara Butt',    email: 'zara@knit.pk',     phone: '03217654321' }, city: 'Multan',    status: 'pending',   products: 0,  createdAt: '2026-03-26' },
-  { id: 'v5', shopName: 'Crafty Hands',      user: { name: 'Nida Shah',    email: 'nida@crafty.pk',   phone: '03320001111' }, city: 'Faisalabad',status: 'suspended', products: 12, createdAt: '2025-09-15' },
-]
-
 export default function AdminVendors() {
-  const [vendors, setVendors] = useState(MOCK_VENDORS)
+  const [vendors, setVendors] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter]   = useState('all')
   const [search, setSearch]   = useState('')
@@ -54,7 +46,7 @@ export default function AdminVendors() {
     try {
       await adminApi.rejectVendor(id)
       setVendors(vs => vs.map(v => v.id === id ? { ...v, status: 'suspended' } : v))
-      toast.error('Vendor rejected — email sent')
+      toast.success('Vendor rejected — email sent')
     } catch { toast.error('Action failed') }
   }
 

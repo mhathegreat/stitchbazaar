@@ -16,16 +16,8 @@ const STATUS_COLORS = {
   suspended: { color: '#D85A30', bg: 'rgba(216,90,48,0.1)',  label: 'Suspended' },
 }
 
-const MOCK_PRODUCTS = [
-  { id: 'p1', name: 'Bamboo Knitting Needles Set', vendor: { shopName: 'CraftHub Lahore' }, category: { name: 'Needles' }, basePrice: 189000, stock: 48, status: 'active',    createdAt: '2026-01-10' },
-  { id: 'p2', name: 'Merino Wool Yarn 100g',       vendor: { shopName: 'Yarn Paradise'   }, category: { name: 'Yarn'    }, basePrice: 120000, stock:  5, status: 'active',    createdAt: '2026-01-15' },
-  { id: 'p3', name: 'Crochet Hook Set 10pcs',      vendor: { shopName: 'Stitch Studio'   }, category: { name: 'Hooks'   }, basePrice: 650000, stock:  0, status: 'inactive',  createdAt: '2026-02-01' },
-  { id: 'p4', name: 'Fake Designer Thread',        vendor: { shopName: 'Bad Actor Shop'  }, category: { name: 'Thread'  }, basePrice:  10000, stock: 99, status: 'active',    createdAt: '2026-03-20' },
-  { id: 'p5', name: 'Embroidery Hoop Set',         vendor: { shopName: 'CraftHub Lahore' }, category: { name: 'Hoops'   }, basePrice:  85000, stock: 12, status: 'suspended', createdAt: '2025-12-05' },
-]
-
 export default function AdminProducts() {
-  const [products, setProducts] = useState(MOCK_PRODUCTS)
+  const [products, setProducts] = useState([])
   const [loading,  setLoading]  = useState(true)
   const [filter,   setFilter]   = useState('all')
   const [search,   setSearch]   = useState('')
@@ -48,7 +40,7 @@ export default function AdminProducts() {
     try {
       await adminApi.moderateProduct(id, status)
       setProducts(ps => ps.map(p => p.id === id ? { ...p, status } : p))
-      toast[status === 'active' ? 'success' : 'error'](`Product ${status === 'active' ? 'approved' : 'suspended'}`)
+      toast.success(`Product ${status === 'active' ? 'approved' : 'suspended'}`)
     } catch { toast.error('Action failed') }
   }
 
