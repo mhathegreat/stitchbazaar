@@ -111,15 +111,6 @@ export default function Navbar({ cartCount = 0 }) {
             {user ? user.name?.split(' ')[0] : 'Account'}
           </Link>
 
-          {/* Vendor CTA */}
-          <Link
-            to="/vendor/register"
-            className="hidden lg:inline-flex items-center px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors"
-            style={{ background: '#D85A30', color: '#FFFCF5' }}
-          >
-            Sell Here
-          </Link>
-
           {/* Mobile menu toggle */}
           <button
             onClick={() => setMobileOpen(v => !v)}
@@ -161,14 +152,6 @@ export default function Navbar({ cartCount = 0 }) {
             style={{ color: '#FFFCF5' }}
           >
             Account
-          </Link>
-          <Link
-            to="/vendor/register"
-            onClick={() => setMobileOpen(false)}
-            className="mt-2 py-2.5 px-3 rounded-lg text-sm font-semibold text-center"
-            style={{ background: '#D85A30', color: '#FFFCF5' }}
-          >
-            Sell on StitchBazaar
           </Link>
         </div>
       )}
