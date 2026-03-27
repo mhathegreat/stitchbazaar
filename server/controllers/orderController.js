@@ -198,7 +198,7 @@ export async function createOrder(req, res, next) {
         orderId: order.id,
         total:   totalAmount,
         items:   order.items.map(i => ({ name: i.product.name, quantity: i.quantity, unitPrice: i.unitPrice })),
-      }).catch(e => logger.warn(`Order email failed: ${e.message}`))
+      }).catch(e => logger.error(`Order confirmation email failed: ${e.message}`))
     }
 
     res.status(201).json({

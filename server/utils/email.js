@@ -22,19 +22,18 @@ function createTransporter() {
  * @param {{ to: string, subject: string, html: string }} options
  */
 export async function sendEmail({ to, subject, html }) {
-  try {
-    const transporter = createTransporter()
-    await transporter.sendMail({
-      from: `"StitchBazaar" <${process.env.EMAIL_USER}>`,
-      to,
-      subject,
-      html,
-    })
-    logger.info(`Email sent to ${to}: ${subject}`)
-  } catch (err) {
-    logger.error(`Failed to send email to ${to}: ${err.message}`)
-    // Don't throw — email failure should not break the main flow
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    logger.warn('Email skipped — EMAIL_USER or EMAIL_PASS not set')
+    return
   }
+  const transporter = createTransporter()
+  await transporter.sendMail({
+    from: `"StitchBazaar" <${process.env.EMAIL_USER}>`,
+    to,
+    subject,
+    html,
+  })
+  logger.info(`Email sent to ${to}: ${subject}`)
 }
 
 /**
