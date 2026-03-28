@@ -416,6 +416,8 @@ export async function getVendorRefunds(req, res, next) {
     })
     const ids = orderRows.map(o => o.orderId)
 
+    if (ids.length === 0) return res.json({ success: true, data: [] })
+
     const refunds = await prisma.refund.findMany({
       where: { orderId: { in: ids } },
       orderBy: { createdAt: 'desc' },
