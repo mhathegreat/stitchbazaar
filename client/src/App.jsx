@@ -49,6 +49,10 @@ import CustomerWishlist from './pages/customer/Wishlist.jsx'
 import OrderDetail     from './pages/customer/OrderDetail.jsx'
 import Dispute         from './pages/customer/Dispute.jsx'
 
+// ── Messaging ─────────────────────────────────────────────────────
+import Messages from './pages/Messages.jsx'
+import ChatRoom from './pages/ChatRoom.jsx'
+
 // ── Admin pages ───────────────────────────────────────────────────
 import AdminDashboard  from './pages/admin/AdminDashboard.jsx'
 import AdminVendors    from './pages/admin/AdminVendors.jsx'
@@ -123,6 +127,12 @@ function AppShell() {
         <Route path="/customer/orders/:id/dispute" element={<ProtectedRoute><Dispute /></ProtectedRoute>} />
         <Route path="/customer/wishlist"         element={<ProtectedRoute><CustomerWishlist /></ProtectedRoute>} />
         <Route path="/customer/profile"          element={<ProtectedRoute><CustomerProfile /></ProtectedRoute>} />
+
+        {/* ── Messaging ── */}
+        <Route path="/messages"              element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+        <Route path="/messages/:id"          element={<ProtectedRoute><ChatRoom /></ProtectedRoute>} />
+        <Route path="/vendor/messages"       element={<ProtectedRoute role="vendor"><Messages /></ProtectedRoute>} />
+        <Route path="/vendor/messages/:id"   element={<ProtectedRoute role="vendor"><ChatRoom /></ProtectedRoute>} />
 
         {/* ── Messaging ── */}
         <Route path="/messages"              element={<ProtectedRoute><Messages /></ProtectedRoute>} />
