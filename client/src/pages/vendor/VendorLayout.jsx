@@ -1,31 +1,26 @@
 /**
- * Shared Admin layout — sidebar + main content wrapper.
- * Used by all /admin/* sub-pages.
+ * Shared Vendor layout — sidebar + main content wrapper.
+ * Used by all /vendor/* sub-pages.
  */
 
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  LayoutDashboard, Store, Package, ShoppingBag,
-  DollarSign, AlertTriangle, Tag, LogOut,
-  Ticket, Truck, RotateCcw, Shield,
+  LayoutDashboard, Package, ShoppingBag,
+  DollarSign, Store, MessageCircle, LogOut, Upload,
 } from 'lucide-react'
 import PageWrapper from '../../components/layout/PageWrapper.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
-import { adminApi } from '../../api/admin.js'
+import { vendorsApi } from '../../api/vendors.js'
 
 const NAV = [
-  { to: '/admin',            label: 'Dashboard',  icon: <LayoutDashboard size={16} /> },
-  { to: '/admin/vendors',    label: 'Vendors',    icon: <Store size={16} />,          countKey: 'pendingVendors'  },
-  { to: '/admin/products',   label: 'Products',   icon: <Package size={16} />         },
-  { to: '/admin/orders',     label: 'Orders',     icon: <ShoppingBag size={16} />,    countKey: 'pendingOrders'   },
-  { to: '/admin/payouts',    label: 'Payouts',    icon: <DollarSign size={16} />,     countKey: 'pendingPayouts'  },
-  { to: '/admin/disputes',   label: 'Disputes',   icon: <AlertTriangle size={16} />,  countKey: 'openDisputes'    },
-  { to: '/admin/categories', label: 'Categories', icon: <Tag size={16} />             },
-  { to: '/admin/coupons',    label: 'Coupons',    icon: <Ticket size={16} />          },
-  { to: '/admin/shipping',   label: 'Shipping',   icon: <Truck size={16} />           },
-  { to: '/admin/refunds',    label: 'Refunds',    icon: <RotateCcw size={16} />,      countKey: 'pendingRefunds'  },
-  { to: '/admin/audit',      label: 'Audit Log',  icon: <Shield size={16} />          },
+  { to: '/vendor/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={16} />, countKey: 'attention'     },
+  { to: '/vendor/products',  label: 'Products',  icon: <Package size={16} />                                    },
+  { to: '/vendor/orders',    label: 'Orders',    icon: <ShoppingBag size={16} />,    countKey: 'pendingOrders'  },
+  { to: '/vendor/earnings',  label: 'Earnings',  icon: <DollarSign size={16} />                                 },
+  { to: '/vendor/import',    label: 'Import',    icon: <Upload size={16} />                                     },
+  { to: '/vendor/messages',  label: 'Messages',  icon: <MessageCircle size={16} />                              },
+  { to: '/vendor/settings',  label: 'Settings',  icon: <Store size={16} />                                      },
 ]
 
 function Badge({ count }) {
@@ -38,25 +33,34 @@ function Badge({ count }) {
   )
 }
 
-export default function AdminLayout({ children, active, title }) {
+export default function VendorLayout({ children, active, title }) {
   const { logout } = useAuth()
   const [counts, setCounts] = useState({})
 
   useEffect(() => {
-    adminApi.counts()
-      .then(d => { if (d.data) setCounts(d.data) })
+    vendorsApi.counts()
+      .then(d => {
+        if (d.data) {
+          const { pendingOrders, pendingRefunds, openDisputes } = d.data
+          setCounts({
+            pendingOrders,
+            // Dashboard badge = total items needing attention (refunds + disputes)
+            attention: (pendingRefunds || 0) + (openDisputes || 0),
+          })
+        }
+      })
       .catch(() => {})
-  }, [active]) // re-fetch when navigating between pages
+  }, [active])
 
   return (
-    <PageWrapper title={`Admin — ${title}`}>
+    <PageWrapper title={title ? `Vendor — ${title}` : 'Vendor Panel'}>
       <div className="flex min-h-screen" style={{ background: '#FFFCF5' }}>
 
         {/* Sidebar */}
         <aside className="hidden md:flex flex-col w-56 shrink-0 py-6 px-3 gap-1 overflow-y-auto"
           style={{ background: '#1C0A00', minHeight: '100vh' }}>
           <div className="px-3 mb-5">
-            <p className="font-serif font-bold text-base" style={{ color: '#C88B00' }}>Admin Panel</p>
+            <p className="font-serif font-bold text-base" style={{ color: '#C88B00' }}>Vendor Panel</p>
             <p className="text-[10px] tracking-widest mt-0.5" style={{ color: '#7A6050' }}>STITCHBAZAAR</p>
           </div>
 
@@ -81,7 +85,7 @@ export default function AdminLayout({ children, active, title }) {
         </aside>
 
         {/* Content */}
-        <main className="flex-1 min-w-0 px-4 sm:px-6 py-8">
+        <main className="flex-1 min-w-0 overflow-x-hidden">
           {children}
         </main>
       </div>

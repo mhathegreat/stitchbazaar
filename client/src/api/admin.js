@@ -4,6 +4,9 @@
 import api from './client.js'
 
 export const adminApi = {
+  counts: () =>
+    api.get('/admin/counts').then(r => r.data),
+
   dashboard: () =>
     api.get('/admin/dashboard').then(r => r.data),
 

@@ -368,6 +368,38 @@ export async function getVendorOrders(req, res, next) {
 }
 
 /**
+ * GET /api/v1/vendors/counts
+ * Lightweight badge counts for the vendor sidebar.
+ */
+export async function getVendorCounts(req, res, next) {
+  try {
+    const vendor = await prisma.vendor.findUnique({ where: { userId: req.user.id } })
+    if (!vendor) return res.json({ success: true, data: { pendingOrders: 0, pendingRefunds: 0, openDisputes: 0 } })
+
+    const orderRows = await prisma.orderItem.findMany({
+      where:    { vendorId: vendor.id },
+      select:   { orderId: true },
+      distinct: ['orderId'],
+    })
+    const orderIds = orderRows.map(r => r.orderId)
+
+    const [pendingOrders, pendingRefunds, openDisputes] = await Promise.all([
+      prisma.orderItem.count({ where: { vendorId: vendor.id, vendorStatus: 'pending' } }),
+      orderIds.length
+        ? prisma.refund.count({ where: { orderId: { in: orderIds }, status: 'pending' } })
+        : Promise.resolve(0),
+      orderIds.length
+        ? prisma.dispute.count({ where: { orderId: { in: orderIds }, status: { in: ['open', 'investigating'] } } })
+        : Promise.resolve(0),
+    ])
+
+    res.json({ success: true, data: { pendingOrders, pendingRefunds, openDisputes } })
+  } catch (err) {
+    next(err)
+  }
+}
+
+/**
  * GET /api/v1/vendors/disputes
  * Returns disputes on orders that contain items from this vendor.
  */

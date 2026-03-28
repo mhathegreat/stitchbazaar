@@ -4,19 +4,11 @@
 
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Edit2, Trash2, Eye, EyeOff, Search, Package, Store, ShoppingBag, DollarSign, AlertTriangle, LayoutDashboard, Upload } from 'lucide-react'
-import PageWrapper from '../../components/layout/PageWrapper.jsx'
+import { Plus, Edit2, Trash2, Eye, EyeOff, Search, Package, AlertTriangle, Upload } from 'lucide-react'
+import VendorLayout from './VendorLayout.jsx'
 import { formatPrice, cardAccent } from '../../styles/theme.js'
 import { productsApi } from '../../api/products.js'
 import toast from 'react-hot-toast'
-
-const VENDOR_NAV = [
-  { to: '/vendor/dashboard', label: 'Dashboard',  icon: <LayoutDashboard size={16} /> },
-  { to: '/vendor/products',  label: 'Products',   icon: <Package size={16} />    },
-  { to: '/vendor/orders',    label: 'Orders',     icon: <ShoppingBag size={16} />},
-  { to: '/vendor/earnings',  label: 'Earnings',   icon: <DollarSign size={16} /> },
-  { to: '/vendor/settings',  label: 'Settings',   icon: <Store size={16} />      },
-]
 
 const STATUS_COLORS = {
   active:    { color: '#0F6E56', bg: 'rgba(15,110,86,0.1)',   label: 'Active'    },
@@ -68,28 +60,8 @@ export default function VendorProducts() {
   }
 
   return (
-    <PageWrapper title="My Products">
-      <div className="flex min-h-screen" style={{ background: '#FFFCF5' }}>
-
-        {/* Sidebar */}
-        <aside className="hidden md:flex flex-col w-52 shrink-0 py-6 px-3 gap-1"
-          style={{ background: '#1C0A00', minHeight: '100vh' }}>
-          <div className="px-3 mb-5">
-            <p className="font-serif font-bold text-base" style={{ color: '#C88B00' }}>Vendor Panel</p>
-            <p className="text-[10px] tracking-widest mt-0.5" style={{ color: '#7A6050' }}>STITCHBAZAAR</p>
-          </div>
-          {VENDOR_NAV.map(n => (
-            <Link key={n.to} to={n.to}
-              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors hover:bg-white/10"
-              style={{ color: n.to === '/vendor/products' ? '#C88B00' : '#C8B89A',
-                       background: n.to === '/vendor/products' ? 'rgba(200,139,0,0.15)' : 'transparent' }}>
-              <span style={{ color: '#C88B00' }}>{n.icon}</span> {n.label}
-            </Link>
-          ))}
-        </aside>
-
-        {/* Main */}
-        <div className="flex-1 min-w-0 px-4 sm:px-6 py-8">
+    <VendorLayout active="/vendor/products" title="My Products">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
 
           {/* Header */}
           <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
@@ -247,8 +219,7 @@ export default function VendorProducts() {
               </p>
             </div>
           )}
-        </div>
       </div>
-    </PageWrapper>
+    </VendorLayout>
   )
 }

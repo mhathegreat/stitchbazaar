@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { requireAuth } from '../middleware/auth.js'
 import { requireRole } from '../middleware/roleCheck.js'
 import {
-  getAdminDashboard, getAnalytics,
+  getAdminCounts, getAdminDashboard, getAnalytics,
   listAllVendors, approveVendor, rejectVendor,
   listPayouts, processPayout,
   listDisputes, resolveDispute,
@@ -15,6 +15,7 @@ const router = Router()
 router.use(requireAuth, requireRole('admin'))
 
 // Dashboard
+router.get('/counts',                getAdminCounts)
 router.get('/dashboard',             getAdminDashboard)
 router.get('/analytics',             getAnalytics)
 

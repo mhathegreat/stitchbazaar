@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Package, ShoppingBag, DollarSign, TrendingUp, Plus, Eye, Clock, CheckCircle, Truck, AlertCircle, Loader2, RefreshCw, XCircle } from 'lucide-react'
 
-import PageWrapper    from '../../components/layout/PageWrapper.jsx'
+import VendorLayout   from './VendorLayout.jsx'
 import BeadDots       from '../../components/mosaic/BeadDots.jsx'
 import ColorBlob      from '../../components/mosaic/ColorBlob.jsx'
 import BrushstrokeHeading from '../../components/mosaic/BrushstrokeHeading.jsx'
@@ -89,8 +89,8 @@ export default function VendorDashboard() {
   ] : []
 
   return (
-    <PageWrapper title="Vendor Dashboard">
-      <div className="min-h-screen relative" style={{ background: '#FFFCF5' }}>
+    <VendorLayout active="/vendor/dashboard" title="Dashboard">
+      <div className="relative" style={{ background: '#FFFCF5' }}>
         <ColorBlob color="#C88B00" className="top-0 right-0 w-96 h-96" opacity={0.04} />
 
         {/* ── Header ── */}
@@ -347,6 +347,6 @@ export default function VendorDashboard() {
           </div>
         </div>
       </div>
-    </PageWrapper>
+    </VendorLayout>
   )
 }

@@ -5,22 +5,13 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   ShoppingBag, Clock, CheckCircle, Package, Truck, XCircle,
-  ChevronDown, ChevronUp, Phone, MapPin, CreditCard,
-  LayoutDashboard, DollarSign, Store, AlertCircle, MessageCircle,
+  ChevronDown, ChevronUp, Phone, MapPin, CreditCard, AlertCircle, MessageCircle,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import PageWrapper from '../../components/layout/PageWrapper.jsx'
+import VendorLayout from './VendorLayout.jsx'
 import { formatPrice } from '../../styles/theme.js'
 import { vendorsApi } from '../../api/vendors.js'
 import { chatApi }    from '../../api/chat.js'
-
-const VENDOR_NAV = [
-  { to: '/vendor/dashboard', label: 'Dashboard',  icon: <LayoutDashboard size={16} /> },
-  { to: '/vendor/products',  label: 'Products',   icon: <Package size={16} />         },
-  { to: '/vendor/orders',    label: 'Orders',     icon: <ShoppingBag size={16} />     },
-  { to: '/vendor/earnings',  label: 'Earnings',   icon: <DollarSign size={16} />      },
-  { to: '/vendor/settings',  label: 'Settings',   icon: <Store size={16} />           },
-]
 
 const STATUS_CONFIG = {
   pending:   { label: 'Pending',   color: '#C88B00', bg: 'rgba(200,139,0,0.12)',  icon: <Clock size={12} />,        next: 'confirmed'  },
@@ -94,28 +85,8 @@ export default function VendorOrders() {
   ]
 
   return (
-    <PageWrapper title="Orders">
-      <div className="flex min-h-screen" style={{ background: '#FFFCF5' }}>
-        {/* Sidebar */}
-        <aside className="hidden md:flex flex-col w-52 shrink-0 py-6 px-3 gap-1"
-          style={{ background: '#1C0A00', minHeight: '100vh' }}>
-          <div className="px-3 mb-5">
-            <p className="font-serif font-bold text-base" style={{ color: '#C88B00' }}>Vendor Panel</p>
-            <p className="text-[10px] tracking-widest mt-0.5" style={{ color: '#7A6050' }}>STITCHBAZAAR</p>
-          </div>
-          {VENDOR_NAV.map(n => (
-            <Link key={n.to} to={n.to}
-              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all"
-              style={n.to === '/vendor/orders'
-                ? { background: 'rgba(200,139,0,0.15)', color: '#C88B00' }
-                : { color: '#7A6050' }}>
-              {n.icon} {n.label}
-            </Link>
-          ))}
-        </aside>
-
-        <main className="flex-1 px-4 sm:px-6 py-6 overflow-x-hidden">
-          <div className="max-w-4xl mx-auto">
+    <VendorLayout active="/vendor/orders" title="Orders">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
             <h1 className="font-serif font-bold text-2xl mb-5" style={{ color: '#1C0A00' }}>
               Order <span style={{ color: '#C88B00' }}>Management</span>
             </h1>
@@ -290,9 +261,7 @@ export default function VendorOrders() {
                 })}
               </div>
             )}
-          </div>
-        </main>
       </div>
-    </PageWrapper>
+    </VendorLayout>
   )
 }

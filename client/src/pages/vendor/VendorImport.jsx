@@ -7,7 +7,7 @@ import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Upload, FileText, CheckCircle, XCircle, Download, ArrowLeft } from 'lucide-react'
 import toast from 'react-hot-toast'
-import PageWrapper from '../../components/layout/PageWrapper.jsx'
+import VendorLayout from './VendorLayout.jsx'
 import api from '../../api/client.js'
 
 const TEMPLATE_CSV = `name,categorySlug,basePrice,stock,description,tags,images
@@ -60,7 +60,7 @@ export default function VendorImport() {
   }
 
   return (
-    <PageWrapper title="Bulk Import Products">
+    <VendorLayout active="/vendor/import" title="Import">
       <div className="max-w-2xl mx-auto px-4 py-8">
         <Link to="/vendor/products" className="flex items-center gap-2 text-sm mb-6 hover:underline"
           style={{ color: '#C88B00' }}>
@@ -173,6 +173,6 @@ export default function VendorImport() {
           </div>
         )}
       </div>
-    </PageWrapper>
+    </VendorLayout>
   )
 }

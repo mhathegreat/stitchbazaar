@@ -23,6 +23,25 @@ export const categorySchema = z.object({
 
 // ── Dashboard ────────────────────────────────────────────────────
 
+/**
+ * GET /api/v1/admin/counts
+ * Lightweight badge counts for the sidebar.
+ */
+export async function getAdminCounts(req, res, next) {
+  try {
+    const [pendingVendors, pendingOrders, pendingPayouts, openDisputes, pendingRefunds] = await Promise.all([
+      prisma.vendor.count({ where: { status: 'pending' } }),
+      prisma.order.count({ where: { status: 'pending' } }),
+      prisma.payout.count({ where: { status: 'pending' } }),
+      prisma.dispute.count({ where: { status: { in: ['open', 'investigating'] } } }),
+      prisma.refund.count({ where: { status: 'pending' } }),
+    ])
+    res.json({ success: true, data: { pendingVendors, pendingOrders, pendingPayouts, openDisputes, pendingRefunds } })
+  } catch (err) {
+    next(err)
+  }
+}
+
 export async function getAdminDashboard(req, res, next) {
   try {
     const [

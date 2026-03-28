@@ -4,6 +4,9 @@
 import api from './client.js'
 
 export const vendorsApi = {
+  counts: () =>
+    api.get('/vendors/counts').then(r => r.data),
+
   list: (params = {}) =>
     api.get('/vendors', { params }).then(r => r.data),
 

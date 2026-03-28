@@ -6,6 +6,7 @@ import {
   listVendors, getVendor, registerVendor, updateVendorProfile,
   getVendorDashboard, requestPayout, getVendorEarnings, getVendorOrders,
   updateVendorOrderStatus, getVendorDisputes, getVendorRefunds, processVendorRefund,
+  getVendorCounts,
 } from '../controllers/vendorController.js'
 
 const router = Router()
@@ -16,6 +17,7 @@ router.get('/', listVendors)
 
 // ── Auth-required routes MUST come before /:id  ───────────────────
 // (Express matches routes in order — /:id would swallow these otherwise)
+router.get('/counts',          requireAuth, requireRole('vendor'), getVendorCounts)
 router.post('/register',       requireAuth, registerVendor)
 router.put('/profile',         requireAuth, requireRole('vendor'), updateVendorProfile)
 router.get('/dashboard',       requireAuth, requireRole('vendor'), getVendorDashboard)
