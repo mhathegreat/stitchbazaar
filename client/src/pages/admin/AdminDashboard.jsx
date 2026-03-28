@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Users, Store, ShoppingBag, DollarSign, CheckCircle, XCircle, Eye, AlertTriangle, Package } from 'lucide-react'
+import { Users, Store, ShoppingBag, DollarSign, CheckCircle, XCircle, Eye, AlertTriangle, Package, RefreshCw } from 'lucide-react'
 import AdminLayout from './AdminLayout.jsx'
 import BeadDots from '../../components/mosaic/BeadDots.jsx'
 import ColorBlob from '../../components/mosaic/ColorBlob.jsx'
@@ -21,6 +21,7 @@ export default function AdminDashboard() {
   const [vendors,     setVendors]     = useState([])
   const [payouts,     setPayouts]     = useState([])
   const [disputes,    setDisputes]    = useState([])
+  const [refunds,     setRefunds]     = useState([])
   const [topProducts, setTopProducts] = useState([])
   const [loading,     setLoading]     = useState(true)
 
@@ -29,9 +30,10 @@ export default function AdminDashboard() {
       .then(dash => {
         const d = dash.data
         setStats(d.stats)
-        setVendors(d.pendingVendors || [])
-        setPayouts(d.pendingPayouts || [])
-        setDisputes(d.openDisputes  || [])
+        setVendors(d.pendingVendors  || [])
+        setPayouts(d.pendingPayouts  || [])
+        setDisputes(d.openDisputes   || [])
+        setRefunds(d.pendingRefunds  || [])
       })
       .catch(() => toast.error('Failed to load dashboard data'))
       .finally(() => setLoading(false))
@@ -189,6 +191,41 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+
+        {/* Pending Refunds */}
+        {(loading || refunds.length > 0) && (
+          <div className="rounded-xl overflow-hidden mb-6" style={{ border: '2px solid rgba(106,76,147,0.2)' }}>
+            <div className="px-4 py-3" style={{ background: '#6A4C93' }}>
+              <span className="font-serif font-bold text-sm" style={{ color: '#FFFCF5' }}>
+                Pending Refund Requests ({refunds.length})
+              </span>
+            </div>
+            <div className="divide-y" style={{ background: '#FFF8E7' }}>
+              {loading ? (
+                <p className="p-4 text-sm text-center" style={{ color: '#7A6050' }}>Loading…</p>
+              ) : refunds.map(r => (
+                <div key={r.id} className="p-4 flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                    style={{ background: 'rgba(106,76,147,0.1)', color: '#6A4C93' }}>
+                    <RefreshCw size={16} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm" style={{ color: '#1C0A00' }}>
+                      {r.customer?.name || 'Guest'} — {r.reason?.slice(0, 60)}
+                    </p>
+                    <p className="text-xs mt-0.5" style={{ color: '#7A6050' }}>
+                      Order #{(r.order?.id || '').slice(-8).toUpperCase()} · Amount: {r.amount} · {(r.createdAt || '').slice(0, 10)}
+                    </p>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold shrink-0"
+                    style={{ background: 'rgba(200,139,0,0.1)', color: '#C88B00' }}>
+                    pending
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 

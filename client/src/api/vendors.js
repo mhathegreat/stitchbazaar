@@ -32,4 +32,5 @@ export const vendorsApi = {
     api.put(`/vendors/orders/${itemId}/status`, { status }).then(r => r.data),
 
   disputes: () => api.get('/vendors/disputes').then(r => r.data),
+  refunds:  () => api.get('/vendors/refunds').then(r => r.data),
 }

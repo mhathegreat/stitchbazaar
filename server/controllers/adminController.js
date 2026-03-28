@@ -28,7 +28,7 @@ export async function getAdminDashboard(req, res, next) {
     const [
       totalCustomers, totalVendors, totalOrders,
       revenueAgg, pendingVendors, pendingPayouts,
-      openDisputes, recentOrders,
+      openDisputes, pendingRefunds, recentOrders,
     ] = await Promise.all([
       prisma.user.count({ where: { role: 'customer' } }),
       prisma.vendor.count({ where: { status: 'active' } }),
@@ -55,6 +55,15 @@ export async function getAdminDashboard(req, res, next) {
           customer: { select: { name: true, email: true } },
         },
       }),
+      prisma.refund.findMany({
+        where:   { status: 'pending' },
+        take:    10,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          customer: { select: { name: true, email: true } },
+          order:    { select: { id: true, totalAmount: true } },
+        },
+      }),
       prisma.order.findMany({
         take:    5,
         orderBy: { createdAt: 'desc' },
@@ -74,6 +83,7 @@ export async function getAdminDashboard(req, res, next) {
         pendingVendors,
         pendingPayouts,
         openDisputes,
+        pendingRefunds,
         recentOrders,
       },
     })

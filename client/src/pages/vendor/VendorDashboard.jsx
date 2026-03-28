@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Package, ShoppingBag, DollarSign, TrendingUp, Plus, Eye, Clock, CheckCircle, Truck, AlertCircle, Loader2 } from 'lucide-react'
+import { Package, ShoppingBag, DollarSign, TrendingUp, Plus, Eye, Clock, CheckCircle, Truck, AlertCircle, Loader2, RefreshCw } from 'lucide-react'
 
 import PageWrapper    from '../../components/layout/PageWrapper.jsx'
 import BeadDots       from '../../components/mosaic/BeadDots.jsx'
@@ -38,6 +38,7 @@ export default function VendorDashboard() {
   const [stats,          setStats]          = useState(null)
   const [recentOrders,   setRecentOrders]   = useState([])
   const [disputes,       setDisputes]       = useState([])
+  const [refunds,        setRefunds]        = useState([])
   const [payoutLoading,  setPayoutLoading]  = useState(false)
 
   useEffect(() => {
@@ -51,7 +52,11 @@ export default function VendorDashboard() {
 
     vendorsApi.disputes()
       .then(d => setDisputes(d.data || []))
-      .catch(() => {}) // non-critical, fail silently
+      .catch(() => {})
+
+    vendorsApi.refunds()
+      .then(d => setRefunds(d.data || []))
+      .catch(() => {})
   }, [])
 
   const filtered = activeTab === 'all'
@@ -166,6 +171,44 @@ export default function VendorDashboard() {
                   )
                 })}
               </div>
+
+              {/* Refund Requests section */}
+              {refunds.length > 0 && (
+                <div className="mt-6">
+                  <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                    <h2 className="font-serif font-bold text-base flex items-center gap-2" style={{ color: '#6A4C93' }}>
+                      <RefreshCw size={16} /> Refund Requests ({refunds.length})
+                    </h2>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {refunds.map(r => {
+                      const customerName = r.customer?.name || r.order?.guestName || 'Customer'
+                      const isPending = r.status === 'pending'
+                      return (
+                        <div key={r.id} className="flex items-center gap-3 p-4 rounded-xl"
+                          style={{ background: '#FFF8E7', border: '1.5px solid rgba(106,76,147,0.2)' }}>
+                          <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                            style={{ background: 'rgba(106,76,147,0.1)', color: '#6A4C93' }}>
+                            <RefreshCw size={16} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm truncate" style={{ color: '#1C0A00' }}>
+                              {r.reason}
+                            </p>
+                            <p className="text-xs" style={{ color: '#7A6050' }}>
+                              {customerName} · Order #{(r.order?.id || '').slice(-8).toUpperCase()} · {formatPrice(r.amount)}
+                            </p>
+                          </div>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize shrink-0"
+                            style={{ background: isPending ? 'rgba(200,139,0,0.1)' : 'rgba(15,110,86,0.1)', color: isPending ? '#C88B00' : '#0F6E56' }}>
+                            {r.status}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Disputes section */}
               {disputes.length > 0 && (

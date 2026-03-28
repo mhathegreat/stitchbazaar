@@ -11,7 +11,7 @@ import prisma from '../utils/prisma.js'
 import { audit } from '../utils/audit.js'
 
 const requestSchema = z.object({
-  orderId: z.string().cuid(),
+  orderId: z.string().min(1),
   reason:  z.string().min(10).max(500),
   amount:  z.number().int().positive(),
 })
