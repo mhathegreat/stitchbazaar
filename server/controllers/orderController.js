@@ -264,7 +264,7 @@ export async function getOrder(req, res, next) {
           include: {
             product: { select: { id: true, name: true, images: true, basePrice: true } },
             variant: { select: { label: true } },
-            vendor:  { select: { id: true, shopName: true, colorTheme: true, phone: true } },
+            vendor:  { select: { id: true, shopName: true, colorTheme: true, whatsapp: true } },
           },
         },
         disputes: true,

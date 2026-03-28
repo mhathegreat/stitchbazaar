@@ -71,7 +71,7 @@ export default function OrderDetail() {
           if (d.data.refund) setExistingRefund(d.data.refund)
         }
       })
-      .catch(() => {})
+      .catch(() => toast.error('Could not load order details'))
       .finally(() => setLoading(false))
   }, [id])
 
@@ -88,7 +88,7 @@ export default function OrderDetail() {
   const sc    = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending
   const currentStep = STEPS.indexOf(order.status)
 
-  const firstVendorPhone = order.items?.[0]?.vendor?.phone
+  const firstVendorPhone = order.items?.[0]?.vendor?.whatsapp
   const waLink = firstVendorPhone ? buildOrderWhatsAppLink({
     phone:      firstVendorPhone.replace(/\D/g,'').replace(/^0/,'92'),
     orderId:    order.id,
