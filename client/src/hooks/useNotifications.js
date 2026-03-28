@@ -88,6 +88,13 @@ export function useNotifications() {
           message: `Your shop application needs attention.`,
           link:    '/vendor/dashboard',
         }
+      case 'new_message':
+        return {
+          icon:    '💬',
+          title:   'New Message',
+          message: `${payload.senderName}: ${payload.preview}`,
+          link:    `/messages/${payload.conversationId}`,
+        }
       default:
         return null
     }

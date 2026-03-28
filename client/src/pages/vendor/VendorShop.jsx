@@ -4,8 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { MapPin, Package, Star, MessageCircle } from 'lucide-react'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+import { MapPin, Package, Star, MessageCircle, Loader2 } from 'lucide-react'
 
 import PageWrapper    from '../../components/layout/PageWrapper.jsx'
 import ProductGrid    from '../../components/product/ProductGrid.jsx'
@@ -15,13 +15,31 @@ import DiamondMotif   from '../../components/mosaic/DiamondMotif.jsx'
 import BrushstrokeHeading from '../../components/mosaic/BrushstrokeHeading.jsx'
 import { vendorTheme, formatPrice } from '../../styles/theme.js'
 import { vendorsApi } from '../../api/vendors.js'
+import { chatApi }    from '../../api/chat.js'
+import { useAuth }    from '../../context/AuthContext.jsx'
 import toast from 'react-hot-toast'
 
 export default function VendorShop() {
-  const { id } = useParams()
-  const [vendor,  setVendor]  = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error,   setError]   = useState(false)
+  const { id }      = useParams()
+  const navigate    = useNavigate()
+  const { user }    = useAuth()
+  const [vendor,       setVendor]       = useState(null)
+  const [loading,      setLoading]      = useState(true)
+  const [error,        setError]        = useState(false)
+  const [startingChat, setStartingChat] = useState(false)
+
+  async function startChat() {
+    if (!vendor) return
+    setStartingChat(true)
+    try {
+      const d = await chatApi.start(vendor.id)
+      navigate(`/messages/${d.data.id}`)
+    } catch {
+      toast.error('Could not start chat')
+    } finally {
+      setStartingChat(false)
+    }
+  }
 
   useEffect(() => {
     setLoading(true)
@@ -88,14 +106,24 @@ export default function VendorShop() {
             </div>
           </div>
 
-          {/* WhatsApp CTA */}
-          {vendor.phone && (
-            <a href={`https://wa.me/${vendor.phone.replace(/\D/g,'').replace(/^0/,'92')}`} target="_blank" rel="noopener noreferrer"
-              className="ml-auto hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all hover:-translate-y-0.5"
-              style={{ background: '#1C0A00', color: '#C88B00' }}>
-              <MessageCircle size={15} style={{ color: '#2DC653' }} /> WhatsApp
-            </a>
-          )}
+          {/* CTA buttons */}
+          <div className="ml-auto hidden sm:flex items-center gap-2 flex-wrap">
+            {vendor.phone && (
+              <a href={`https://wa.me/${vendor.phone.replace(/\D/g,'').replace(/^0/,'92')}`} target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all hover:-translate-y-0.5"
+                style={{ background: '#1C0A00', color: '#C88B00' }}>
+                <MessageCircle size={15} style={{ color: '#2DC653' }} /> WhatsApp
+              </a>
+            )}
+            {user?.role === 'customer' && (
+              <button onClick={startChat} disabled={startingChat}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:-translate-y-0.5 disabled:opacity-60"
+                style={{ background: '#1C0A00', color: '#C88B00', border: '1px solid rgba(200,139,0,0.3)' }}>
+                {startingChat ? <Loader2 size={14} className="animate-spin" /> : <MessageCircle size={14} />}
+                Message Shop
+              </button>
+            )}
+          </div>
         </div>
       </section>
 

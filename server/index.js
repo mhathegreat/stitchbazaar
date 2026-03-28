@@ -43,6 +43,7 @@ import shippingRoutes     from './routes/shipping.js'
 import refundRoutes       from './routes/refunds.js'
 import questionRoutes     from './routes/questions.js'
 import cartRoutes         from './routes/cart.js'
+import chatRoutes         from './routes/chat.js'
 import { startCartRecoveryCron } from './utils/cartRecovery.js'
 
 const app  = express()
@@ -103,6 +104,7 @@ app.use(`${v1}/shipping`,        shippingRoutes)
 app.use(`${v1}/refunds`,         refundRoutes)
 app.use(`${v1}`,                 questionRoutes)   // /products/:id/questions + /questions/:id
 app.use(`${v1}/cart`,            cartRoutes)
+app.use(`${v1}/conversations`,   chatRoutes)
 
 // ── 404 + error handlers ─────────────────────────────────────────
 app.use(notFound)

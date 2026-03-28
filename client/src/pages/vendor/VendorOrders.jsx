@@ -2,16 +2,17 @@
  * Vendor Orders — detailed order management
  */
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   ShoppingBag, Clock, CheckCircle, Package, Truck, XCircle,
   ChevronDown, ChevronUp, Phone, MapPin, CreditCard,
-  LayoutDashboard, DollarSign, Store, AlertCircle,
+  LayoutDashboard, DollarSign, Store, AlertCircle, MessageCircle,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import PageWrapper from '../../components/layout/PageWrapper.jsx'
 import { formatPrice } from '../../styles/theme.js'
 import { vendorsApi } from '../../api/vendors.js'
+import { chatApi }    from '../../api/chat.js'
 
 const VENDOR_NAV = [
   { to: '/vendor/dashboard', label: 'Dashboard',  icon: <LayoutDashboard size={16} /> },
@@ -37,11 +38,22 @@ const NEXT_LABEL = {
 }
 
 export default function VendorOrders() {
+  const navigate = useNavigate()
   const [items,    setItems]    = useState([])
   const [loading,  setLoading]  = useState(true)
   const [filter,   setFilter]   = useState('all')
   const [expanded, setExpanded] = useState({})
   const [updating, setUpdating] = useState(null)
+
+  async function startChat(customerId) {
+    if (!customerId) return toast.error('No customer account to chat with')
+    try {
+      const d = await chatApi.startAsVendor(customerId)
+      navigate(`/vendor/messages/${d.data.id}`)
+    } catch {
+      toast.error('Could not start chat')
+    }
+  }
 
   useEffect(() => {
     vendorsApi.orders()
@@ -231,6 +243,16 @@ export default function VendorOrders() {
                               {city && <p className="text-xs" style={{ color: '#7A6050' }}>{city}</p>}
                             </div>
                           </div>
+                          {item.order?.customer?.id && (
+                            <div className="pt-1 sm:col-span-3">
+                              <button
+                                onClick={() => startChat(item.order.customer.id)}
+                                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:-translate-y-0.5"
+                                style={{ background: 'rgba(200,139,0,0.1)', color: '#C88B00', border: '1px solid rgba(200,139,0,0.2)' }}>
+                                <MessageCircle size={13} /> Message Customer
+                              </button>
+                            </div>
+                          )}
                         </div>
                       )}
 

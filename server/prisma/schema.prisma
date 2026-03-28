@@ -103,6 +103,8 @@ model User {
   questionsAsked   Question[]     @relation("CustomerQuestions")
   questionsAnswered Question[]    @relation("VendorAnswers")
   savedCart        SavedCart?
+  conversations    Conversation[] @relation("CustomerConvos")
+  sentMessages     Message[]      @relation("SentMessages")
 
   @@map("users")
 }
@@ -142,6 +144,7 @@ model Vendor {
   orderItems         OrderItem[]
   payouts            Payout[]
   bankDetails        BankDetail[]
+  conversations    Conversation[]
 
   @@map("vendors")
 }
@@ -356,6 +359,36 @@ model ShippingRate {
   updatedAt DateTime @updatedAt
 
   @@map("shipping_rates")
+}
+
+model Conversation {
+  id          String    @id @default(cuid())
+  customerId  String
+  vendorId    String
+  lastMessage String?
+  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime  @default(now())
+
+  customer    User      @relation("CustomerConvos", fields: [customerId], references: [id])
+  vendor      Vendor    @relation(fields: [vendorId], references: [id])
+  messages    Message[]
+
+  @@unique([customerId, vendorId])
+  @@map("conversations")
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  senderId       String
+  body           String
+  readAt         DateTime?
+  createdAt      DateTime     @default(now())
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation("SentMessages", fields: [senderId], references: [id])
+
+  @@map("messages")
 }
 
 model AuditLog {
