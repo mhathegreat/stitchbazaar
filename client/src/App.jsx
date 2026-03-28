@@ -66,10 +66,6 @@ import AdminShipping   from './pages/admin/AdminShipping.jsx'
 import AdminRefunds    from './pages/admin/AdminRefunds.jsx'
 import AdminAuditLog   from './pages/admin/AdminAuditLog.jsx'
 
-// ── Messaging pages ───────────────────────────────────────────────
-import Messages from './pages/Messages.jsx'
-import ChatRoom from './pages/ChatRoom.jsx'
-
 // ── 404 ───────────────────────────────────────────────────────────
 function NotFound() {
   return (
