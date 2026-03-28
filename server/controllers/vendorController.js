@@ -439,6 +439,48 @@ export async function getVendorRefunds(req, res, next) {
   }
 }
 
+export async function processVendorRefund(req, res, next) {
+  try {
+    const { status, vendorNote } = req.body || {}
+    if (!['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'status must be approved or rejected' })
+    }
+
+    const vendor = await prisma.vendor.findUnique({ where: { userId: req.user.id } })
+    if (!vendor) return res.status(404).json({ success: false, message: 'Vendor not found' })
+
+    // Confirm this refund belongs to an order that has this vendor's items
+    const refund = await prisma.refund.findUnique({ where: { id: req.params.id } })
+    if (!refund) return res.status(404).json({ success: false, message: 'Refund not found' })
+
+    const ownsItem = await prisma.orderItem.findFirst({
+      where: { orderId: refund.orderId, vendorId: vendor.id },
+    })
+    if (!ownsItem) return res.status(403).json({ success: false, message: 'This refund is not related to your store' })
+
+    const updated = await prisma.refund.update({
+      where: { id: req.params.id },
+      data:  { status, adminNote: vendorNote || undefined },
+      include: { customer: { select: { name: true, email: true } } },
+    })
+
+    // Fire-and-forget customer notification
+    const { sendRefundDecision } = await import('../utils/email.js')
+    sendRefundDecision({
+      to:        updated.customer.email,
+      name:      updated.customer.name,
+      orderId:   updated.orderId,
+      status,
+      adminNote: updated.adminNote || '',
+      amount:    updated.amount,
+    }).catch(() => {})
+
+    res.json({ success: true, data: updated })
+  } catch (err) {
+    next(err)
+  }
+}
+
 const VALID_VENDOR_STATUSES = ['confirmed', 'packed', 'shipped', 'delivered', 'cancelled']
 
 export async function updateVendorOrderStatus(req, res, next) {

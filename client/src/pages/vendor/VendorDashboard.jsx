@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Package, ShoppingBag, DollarSign, TrendingUp, Plus, Eye, Clock, CheckCircle, Truck, AlertCircle, Loader2, RefreshCw } from 'lucide-react'
+import { Package, ShoppingBag, DollarSign, TrendingUp, Plus, Eye, Clock, CheckCircle, Truck, AlertCircle, Loader2, RefreshCw, XCircle } from 'lucide-react'
 
 import PageWrapper    from '../../components/layout/PageWrapper.jsx'
 import BeadDots       from '../../components/mosaic/BeadDots.jsx'
@@ -37,9 +37,11 @@ export default function VendorDashboard() {
   const [vendor,         setVendor]         = useState(null)
   const [stats,          setStats]          = useState(null)
   const [recentOrders,   setRecentOrders]   = useState([])
-  const [disputes,       setDisputes]       = useState([])
-  const [refunds,        setRefunds]        = useState([])
-  const [payoutLoading,  setPayoutLoading]  = useState(false)
+  const [disputes,        setDisputes]        = useState([])
+  const [refunds,         setRefunds]         = useState([])
+  const [refundNotes,     setRefundNotes]     = useState({})
+  const [processingRefund, setProcessingRefund] = useState(null)
+  const [payoutLoading,   setPayoutLoading]   = useState(false)
 
   useEffect(() => {
     vendorsApi.dashboard()
@@ -58,6 +60,19 @@ export default function VendorDashboard() {
       .then(d => setRefunds(d.data || []))
       .catch(() => toast.error('Failed to load refund requests'))
   }, [])
+
+  async function handleProcessRefund(id, status) {
+    setProcessingRefund(id + status)
+    try {
+      await vendorsApi.processRefund(id, status, refundNotes[id] || '')
+      setRefunds(rs => rs.map(r => r.id === id ? { ...r, status } : r))
+      toast.success(`Refund ${status}`)
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Action failed')
+    } finally {
+      setProcessingRefund(null)
+    }
+  }
 
   const filtered = activeTab === 'all'
     ? recentOrders
@@ -185,25 +200,61 @@ export default function VendorDashboard() {
                   ) : refunds.map(r => {
                     const customerName = r.customer?.name || r.order?.guestName || 'Customer'
                     const isPending = r.status === 'pending'
+                    const statusColor = r.status === 'approved' ? '#0F6E56' : r.status === 'rejected' ? '#D85A30' : '#C88B00'
+                    const statusBg    = r.status === 'approved' ? 'rgba(15,110,86,0.1)' : r.status === 'rejected' ? 'rgba(216,90,48,0.1)' : 'rgba(200,139,0,0.1)'
                     return (
-                      <div key={r.id} className="flex items-center gap-3 p-4 rounded-xl"
+                      <div key={r.id} className="rounded-xl p-4"
                         style={{ background: '#FFF8E7', border: '1.5px solid rgba(106,76,147,0.2)' }}>
-                        <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
-                          style={{ background: 'rgba(106,76,147,0.1)', color: '#6A4C93' }}>
-                          <RefreshCw size={16} />
+                        <div className="flex items-start gap-3">
+                          <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                            style={{ background: 'rgba(106,76,147,0.1)', color: '#6A4C93' }}>
+                            <RefreshCw size={16} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm" style={{ color: '#1C0A00' }}>{r.reason}</p>
+                            <p className="text-xs mt-0.5" style={{ color: '#7A6050' }}>
+                              {customerName} · Order #{(r.order?.id || '').slice(-8).toUpperCase()} · {formatPrice(r.amount)}
+                            </p>
+                          </div>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize shrink-0"
+                            style={{ background: statusBg, color: statusColor }}>
+                            {r.status}
+                          </span>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm truncate" style={{ color: '#1C0A00' }}>
-                            {r.reason}
-                          </p>
-                          <p className="text-xs" style={{ color: '#7A6050' }}>
-                            {customerName} · Order #{(r.order?.id || '').slice(-8).toUpperCase()} · {formatPrice(r.amount)}
-                          </p>
-                        </div>
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize shrink-0"
-                          style={{ background: isPending ? 'rgba(200,139,0,0.1)' : 'rgba(15,110,86,0.1)', color: isPending ? '#C88B00' : '#0F6E56' }}>
-                          {r.status}
-                        </span>
+
+                        {isPending && (
+                          <div className="mt-3 flex flex-col gap-2">
+                            <input
+                              value={refundNotes[r.id] || ''}
+                              onChange={e => setRefundNotes(n => ({ ...n, [r.id]: e.target.value }))}
+                              placeholder="Optional note to customer…"
+                              className="w-full px-3 py-1.5 rounded-lg text-xs outline-none"
+                              style={{ background: '#FFFCF5', border: '1.5px solid rgba(106,76,147,0.25)', color: '#1C0A00' }}
+                            />
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleProcessRefund(r.id, 'approved')}
+                                disabled={processingRefund === r.id + 'approved'}
+                                className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-bold disabled:opacity-60"
+                                style={{ background: '#0F6E56', color: '#FFFCF5' }}>
+                                {processingRefund === r.id + 'approved'
+                                  ? <Loader2 size={12} className="animate-spin" />
+                                  : <CheckCircle size={12} />}
+                                Approve
+                              </button>
+                              <button
+                                onClick={() => handleProcessRefund(r.id, 'rejected')}
+                                disabled={processingRefund === r.id + 'rejected'}
+                                className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-bold disabled:opacity-60"
+                                style={{ background: '#D85A30', color: '#FFFCF5' }}>
+                                {processingRefund === r.id + 'rejected'
+                                  ? <Loader2 size={12} className="animate-spin" />
+                                  : <XCircle size={12} />}
+                                Reject
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )
                   })}
