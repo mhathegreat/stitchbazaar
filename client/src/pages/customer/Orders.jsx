@@ -109,10 +109,11 @@ export default function CustomerOrders() {
                         View Details <ChevronRight size={13} />
                       </Link>
                       {order.status === 'delivered' && (
-                        <button className="flex items-center gap-1 text-xs font-semibold hover:underline ml-3"
+                        <Link to={`/customer/orders/${order.id}/dispute`}
+                          className="flex items-center gap-1 text-xs font-semibold hover:underline ml-3"
                           style={{ color: '#D85A30' }}>
                           <AlertCircle size={13} /> Report Issue
-                        </button>
+                        </Link>
                       )}
                     </div>
                   </div>

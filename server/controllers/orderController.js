@@ -264,10 +264,11 @@ export async function getOrder(req, res, next) {
           include: {
             product: { select: { id: true, name: true, images: true, basePrice: true } },
             variant: { select: { label: true } },
-            vendor:  { select: { id: true, shopName: true, colorTheme: true } },
+            vendor:  { select: { id: true, shopName: true, colorTheme: true, phone: true } },
           },
         },
         disputes: true,
+        refund: { select: { id: true, status: true, amount: true, reason: true, adminNote: true, createdAt: true } },
       },
     })
 

@@ -9,6 +9,8 @@
 import { z } from 'zod'
 import prisma from '../utils/prisma.js'
 import { audit } from '../utils/audit.js'
+import { logger } from '../utils/logger.js'
+import { sendRefundDecision } from '../utils/email.js'
 
 const requestSchema = z.object({
   orderId: z.string().min(1),
@@ -113,6 +115,16 @@ export async function processRefund(req, res, next) {
     })
 
     audit(req, `refund.${status}`, 'Refund', refund.id, { amount: refund.amount, orderId: refund.orderId })
+
+    // Fire-and-forget email to customer
+    sendRefundDecision({
+      to:        refund.customer.email,
+      name:      refund.customer.name,
+      orderId:   refund.orderId,
+      status,
+      adminNote: refund.adminNote || '',
+      amount:    refund.amount,
+    }).catch(err => logger.error('sendRefundDecision failed:', err))
 
     res.json({ success: true, data: refund })
   } catch (err) {

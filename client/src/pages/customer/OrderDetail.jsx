@@ -37,7 +37,7 @@ export default function OrderDetail() {
   const [order,           setOrder]          = useState(MOCK_ORDER)
   const [loading,         setLoading]        = useState(true)
   const [refundReason,    setRefundReason]   = useState('')
-  const [refundSubmitted, setRefundSubmitted]= useState(false)
+  const [existingRefund,  setExistingRefund] = useState(null)
   const [refundLoading,   setRefundLoading]  = useState(false)
   const [showRefundForm,  setShowRefundForm] = useState(false)
 
@@ -48,12 +48,12 @@ export default function OrderDetail() {
     }
     setRefundLoading(true)
     try {
-      await api.post('/refunds', {
+      const res = await api.post('/refunds', {
         orderId: order.id,
         reason:  refundReason.trim(),
         amount:  order.totalAmount,
       })
-      setRefundSubmitted(true)
+      setExistingRefund(res.data?.data || { status: 'pending', amount: order.totalAmount, reason: refundReason.trim() })
       setShowRefundForm(false)
       toast.success('Refund request submitted!')
     } catch (err) {
@@ -65,7 +65,12 @@ export default function OrderDetail() {
 
   useEffect(() => {
     ordersApi.get(id)
-      .then(d => { if (d.data) setOrder(d.data) })
+      .then(d => {
+        if (d.data) {
+          setOrder(d.data)
+          if (d.data.refund) setExistingRefund(d.data.refund)
+        }
+      })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [id])
@@ -242,7 +247,7 @@ export default function OrderDetail() {
               </Link>
             )}
 
-            {user?.role === 'customer' && order.status === 'delivered' && !refundSubmitted && (
+            {user?.role === 'customer' && order.status === 'delivered' && !existingRefund && (
               <button
                 onClick={() => setShowRefundForm(v => !v)}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:-translate-y-0.5"
@@ -250,12 +255,16 @@ export default function OrderDetail() {
                 <RotateCcw size={14} /> Request Refund
               </button>
             )}
-            {user?.role === 'customer' && refundSubmitted && (
-              <span className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold"
-                style={{ background: 'rgba(15,110,86,0.08)', color: '#0F6E56' }}>
-                ✓ Refund requested
-              </span>
-            )}
+            {user?.role === 'customer' && existingRefund && (() => {
+              const refundColor = existingRefund.status === 'approved' ? '#0F6E56' : existingRefund.status === 'rejected' ? '#D85A30' : '#C88B00'
+              const refundBg    = existingRefund.status === 'approved' ? 'rgba(15,110,86,0.08)' : existingRefund.status === 'rejected' ? 'rgba(216,90,48,0.08)' : 'rgba(200,139,0,0.08)'
+              return (
+                <span className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold capitalize"
+                  style={{ background: refundBg, color: refundColor, border: `1px solid ${refundBg}` }}>
+                  <RotateCcw size={14} /> Refund {existingRefund.status}
+                </span>
+              )
+            })()}
 
             <button
               onClick={() => window.print()}
@@ -271,8 +280,16 @@ export default function OrderDetail() {
             </Link>
           </div>
 
+          {/* Existing refund note */}
+          {user?.role === 'customer' && existingRefund?.adminNote && (
+            <div className="mt-4 rounded-xl p-4" style={{ background: '#FFF8E7', border: '2px solid rgba(106,76,147,0.15)' }}>
+              <p className="font-semibold text-sm mb-1" style={{ color: '#6A4C93' }}>Admin Response</p>
+              <p className="text-sm" style={{ color: '#3A2010' }}>{existingRefund.adminNote}</p>
+            </div>
+          )}
+
           {/* Refund form — customers only */}
-          {user?.role === 'customer' && showRefundForm && (
+          {user?.role === 'customer' && showRefundForm && !existingRefund && (
             <div className="mt-4 rounded-xl p-4" style={{ background: '#FFF8E7', border: '2px solid rgba(106,76,147,0.2)' }}>
               <p className="font-semibold text-sm mb-3" style={{ color: '#6A4C93' }}>Reason for refund</p>
               <textarea

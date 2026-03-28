@@ -205,6 +205,33 @@ export async function sendDisputeResolution({ to, name, orderId, status, resolut
 }
 
 /**
+ * Refund decision email (sent to customer when admin approves/rejects).
+ * @param {{ to: string, name: string, orderId: string, status: 'approved'|'rejected', adminNote?: string, amount: number }} data
+ */
+export async function sendRefundDecision({ to, name, orderId, status, adminNote, amount }) {
+  const approved = status === 'approved'
+  await sendEmail({
+    to,
+    subject: `Refund ${approved ? 'Approved' : 'Rejected'} — Order #${orderId.slice(-8).toUpperCase()} | StitchBazaar`,
+    html: `
+      <div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto;background:#FFFCF5;padding:32px;border-radius:12px">
+        <h1 style="font-family:Georgia,serif;color:#C88B00">StitchBazaar</h1>
+        <h2 style="color:${approved ? '#0F6E56' : '#D85A30'}">${approved ? '✅ Refund Approved!' : '❌ Refund Rejected'}</h2>
+        <p>Hi <strong>${name}</strong>,</p>
+        <p>Your refund request of <strong>Rs. ${(amount / 100).toLocaleString()}</strong> for order
+           <strong>#${orderId.slice(-8).toUpperCase()}</strong> has been <strong>${status}</strong>.</p>
+        ${adminNote ? `<p style="background:#FFF0C0;padding:12px;border-radius:8px"><strong>Note from admin:</strong> ${adminNote}</p>` : ''}
+        ${approved ? `<p>Your refund will be processed within 3–5 business days.</p>` : ''}
+        <a href="${process.env.CLIENT_URL}/customer/orders/${orderId}"
+           style="display:inline-block;margin-top:16px;background:#C88B00;color:#1C0A00;padding:12px 24px;border-radius:8px;font-weight:bold;text-decoration:none">
+          View Order
+        </a>
+      </div>
+    `,
+  })
+}
+
+/**
  * Low-stock alert sent to the vendor.
  * @param {{ to: string, shopName: string, productName: string, stock: number, productId: string }} data
  */
