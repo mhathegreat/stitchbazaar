@@ -16,10 +16,9 @@ import MosaicBackground from '../../components/mosaic/MosaicBackground.jsx'
 import BeadDots from '../../components/mosaic/BeadDots.jsx'
 import ColorBlob from '../../components/mosaic/ColorBlob.jsx'
 import { colors } from '../../styles/theme.js'
+import CitySelect from '../../components/ui/CitySelect.jsx'
 
 const STEPS = ['Shop Info', 'Bank Details', 'Review & Submit']
-
-const CITIES = ['Karachi','Lahore','Islamabad','Rawalpindi','Faisalabad','Multan','Peshawar','Quetta','Sialkot','Gujranwala']
 const COLOR_THEMES = [
   { value: '#C88B00', label: 'Amber'      },
   { value: '#D85A30', label: 'Coral'      },
@@ -230,13 +229,13 @@ export default function VendorRegister() {
                     <label className="block text-sm font-medium mb-1.5" style={{ color: '#1C0A00' }}>
                       City <span style={{ color: '#D85A30' }}>*</span>
                     </label>
-                    <select name="city" value={shop.city} onChange={shopChange}
-                      className="w-full px-4 py-3 rounded-xl text-sm outline-none"
-                      style={{ background: '#FFFCF5', border: `2px solid ${errors.city ? '#D85A30' : 'rgba(200,139,0,0.3)'}`, color: shop.city ? '#1C0A00' : '#A07000' }}>
-                      <option value="">Select your city</option>
-                      {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                    {errors.city && <p className="text-xs mt-1" style={{ color: '#D85A30' }}>{errors.city}</p>}
+                    <CitySelect
+                      value={shop.city}
+                      onChange={v => { setShop(s => ({ ...s, city: v })); setErrors(er => ({ ...er, city: '' })) }}
+                      placeholder="Select your city"
+                      required
+                      error={errors.city}
+                    />
                   </div>
 
                   <div>

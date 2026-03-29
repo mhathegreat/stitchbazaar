@@ -424,3 +424,33 @@ export async function raiseDispute(req, res, next) {
     next(err)
   }
 }
+
+/**
+ * PATCH /api/v1/orders/:id
+ * Customer edits delivery details of a pending order.
+ */
+const updateOrderSchema = z.object({
+  deliveryAddress: z.string().min(3).max(500).optional(),
+  city:            z.string().min(2).max(80).optional(),
+  notes:           z.string().max(500).optional(),
+})
+
+export async function updateOrder(req, res, next) {
+  try {
+    const order = await prisma.order.findUnique({ where: { id: req.params.id } })
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' })
+    if (order.customerId !== req.user.id) return res.status(403).json({ success: false, message: 'Forbidden' })
+    if (order.status !== 'pending') return res.status(400).json({ success: false, message: 'Order can only be edited while pending' })
+
+    const parsed = updateOrderSchema.safeParse(req.body)
+    if (!parsed.success) return res.status(422).json({ success: false, errors: parsed.error.flatten().fieldErrors })
+
+    const updated = await prisma.order.update({
+      where: { id: req.params.id },
+      data:  parsed.data,
+    })
+    res.json({ success: true, data: updated })
+  } catch (err) {
+    next(err)
+  }
+}

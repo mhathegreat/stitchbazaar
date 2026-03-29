@@ -13,8 +13,7 @@ import BeadDots from '../components/mosaic/BeadDots.jsx'
 import ColorBlob from '../components/mosaic/ColorBlob.jsx'
 import { vendorsApi } from '../api/vendors.js'
 import toast from 'react-hot-toast'
-
-const CITIES = ['All Cities','Karachi','Lahore','Islamabad','Rawalpindi','Faisalabad','Multan','Peshawar']
+import CitySelect from '../components/ui/CitySelect.jsx'
 
 function SkeletonVendorCard() {
   return (
@@ -77,11 +76,15 @@ export default function Vendors() {
               className="bg-transparent text-sm outline-none flex-1"
               style={{ color: '#1C0A00' }} />
           </div>
-          <select value={city} onChange={e => setCity(e.target.value)}
-            className="px-3 py-2.5 rounded-xl text-sm outline-none"
-            style={{ background: '#FFF8E7', border: '2px solid rgba(200,139,0,0.2)', color: '#1C0A00' }}>
-            {CITIES.map(c => <option key={c}>{c}</option>)}
-          </select>
+          <div className="w-48">
+            <CitySelect
+              value={city === 'All Cities' ? '' : city}
+              onChange={v => setCity(v || 'All Cities')}
+              placeholder="All Cities"
+              allowAll
+              inputStyle={{ background: '#FFF8E7', border: '2px solid rgba(200,139,0,0.2)' }}
+            />
+          </div>
         </div>
 
         {!loading && (

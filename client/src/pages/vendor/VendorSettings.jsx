@@ -10,15 +10,13 @@ import { authApi } from '../../api/auth.js'
 import api from '../../api/client.js'
 import { useAuth } from '../../context/AuthContext.jsx'
 import toast from 'react-hot-toast'
+import CitySelect from '../../components/ui/CitySelect.jsx'
 
 
 const COLOR_OPTIONS = [
   '#C88B00', '#D85A30', '#0F6E56', '#6A4C93',
   '#457B9D', '#2DC653', '#E63946', '#F4A261',
 ]
-
-const CITIES = ['Karachi', 'Lahore', 'Islamabad', 'Rawalpindi', 'Faisalabad',
-                'Multan', 'Peshawar', 'Quetta', 'Hyderabad', 'Sialkot']
 
 const BANKS = ['HBL', 'MCB Bank', 'UBL', 'Bank Alfalah', 'Meezan Bank',
                'Standard Chartered', 'Faysal Bank', 'Allied Bank', 'NBP', 'Askari Bank']
@@ -223,11 +221,7 @@ export default function VendorSettings() {
                 </Field>
 
                 <Field label="City">
-                  <select value={shop.city}
-                    onChange={e => setShop(s => ({ ...s, city: e.target.value }))}
-                    className={inputCls} style={inputStyle}>
-                    {CITIES.map(c => <option key={c}>{c}</option>)}
-                  </select>
+                  <CitySelect value={shop.city} onChange={v => setShop(s => ({ ...s, city: v }))} placeholder="Select city" />
                 </Field>
 
                 <Field label="Shop Colour Theme">

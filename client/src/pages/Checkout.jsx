@@ -14,8 +14,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import PageWrapper from '../components/layout/PageWrapper.jsx'
 import ColorBlob from '../components/mosaic/ColorBlob.jsx'
 import { formatPrice, cardAccent } from '../styles/theme.js'
-
-const CITIES = ['Karachi','Lahore','Islamabad','Rawalpindi','Faisalabad','Multan','Peshawar','Quetta','Sialkot','Gujranwala','Other']
+import CitySelect from '../components/ui/CitySelect.jsx'
 
 function Field({ label, name, value, type = 'text', placeholder, error, required, onChange, children }) {
   return (
@@ -170,12 +169,13 @@ export default function Checkout() {
                     <Field label="Delivery Address" name="address" value={form.address} placeholder="House/Flat, Street, Area" error={errors.address} required onChange={handleChange} />
                   </div>
                   <Field label="City" name="city" value={form.city} error={errors.city} required onChange={handleChange}>
-                    <select name="city" value={form.city} onChange={handleChange}
-                      className="w-full px-4 py-3 rounded-xl text-sm outline-none"
-                      style={{ background: '#FFFCF5', border: `2px solid ${errors.city ? '#D85A30' : 'rgba(200,139,0,0.3)'}`, color: form.city ? '#1C0A00' : '#A07000' }}>
-                      <option value="">Select city</option>
-                      {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
+                    <CitySelect
+                      value={form.city}
+                      onChange={v => { setForm(f => ({ ...f, city: v })); setErrors(er => ({ ...er, city: '' })) }}
+                      placeholder="Select city"
+                      required
+                      error={errors.city}
+                    />
                   </Field>
                   <Field label="Order Notes" name="notes" value={form.notes} placeholder="Special instructions (optional)" onChange={handleChange} />
                 </div>

@@ -16,6 +16,9 @@ export const ordersApi = {
   updateStatus: (id, status) =>
     api.put(`/orders/${id}/status`, { status }).then(r => r.data),
 
+  update: (id, body) =>
+    api.patch(`/orders/${id}`, body).then(r => r.data),
+
   dispute: (id, reason) =>
     api.post(`/orders/${id}/dispute`, { reason }).then(r => r.data),
 }

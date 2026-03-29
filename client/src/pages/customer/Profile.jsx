@@ -9,8 +9,7 @@ import PageWrapper from '../../components/layout/PageWrapper.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
 import { authApi } from '../../api/auth.js'
 import toast from 'react-hot-toast'
-
-const CITIES = ['Karachi','Lahore','Islamabad','Rawalpindi','Faisalabad','Multan','Peshawar','Quetta','Hyderabad','Sialkot']
+import CitySelect from '../../components/ui/CitySelect.jsx'
 
 const NAV = [
   { to: '/customer/profile',  label: 'My Profile',  icon: <User size={16} />        },
@@ -124,11 +123,7 @@ export default function CustomerProfile() {
                 </Field>
 
                 <Field label="City">
-                  <select value={form.city} onChange={e => set('city', e.target.value)}
-                    className={inputCls} style={inputStyle}>
-                    <option value="">-- Select city --</option>
-                    {CITIES.map(c => <option key={c}>{c}</option>)}
-                  </select>
+                  <CitySelect value={form.city} onChange={v => set('city', v)} placeholder="Select city" />
                 </Field>
               </div>
 

@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, CheckCircle, Clock, Package, Truck, XCircle, MessageCircle, Printer, RotateCcw, Star } from 'lucide-react'
+import { ArrowLeft, CheckCircle, Clock, Package, Truck, XCircle, MessageCircle, Printer, RotateCcw, Star, Pencil } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../../api/client.js'
 import PageWrapper from '../../components/layout/PageWrapper.jsx'
@@ -12,6 +12,7 @@ import { formatPrice } from '../../styles/theme.js'
 import { buildOrderWhatsAppLink } from '../../utils/whatsapp.js'
 import { ordersApi } from '../../api/orders.js'
 import { useAuth } from '../../context/AuthContext.jsx'
+import CitySelect from '../../components/ui/CitySelect.jsx'
 
 const STATUS_CONFIG = {
   pending:   { label: 'Pending',   color: '#C88B00', bg: 'rgba(200,139,0,0.1)',  icon: <Clock size={14} />,       step: 0 },
@@ -45,6 +46,9 @@ export default function OrderDetail() {
   const [vendorComment,     setVendorComment]     = useState('')
   const [ratingVendorId,    setRatingVendorId]    = useState('')
   const [submittingRating,  setSubmittingRating]  = useState(false)
+  const [showEditForm,    setShowEditForm]    = useState(false)
+  const [editForm,        setEditForm]        = useState({ deliveryAddress: '', city: '', notes: '' })
+  const [editLoading,     setEditLoading]     = useState(false)
 
   async function submitRefund() {
     if (!refundReason.trim() || refundReason.trim().length < 10) {
@@ -88,11 +92,34 @@ export default function OrderDetail() {
     }
   }
 
+  async function saveOrderEdit() {
+    if (!editForm.deliveryAddress.trim() || !editForm.city.trim()) {
+      toast.error('Delivery address and city are required')
+      return
+    }
+    setEditLoading(true)
+    try {
+      const res = await ordersApi.update(order.id, {
+        deliveryAddress: editForm.deliveryAddress.trim(),
+        city:            editForm.city.trim(),
+        notes:           editForm.notes.trim() || undefined,
+      })
+      setOrder(prev => ({ ...prev, ...res.data }))
+      setShowEditForm(false)
+      toast.success('Order updated!')
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Could not update order')
+    } finally {
+      setEditLoading(false)
+    }
+  }
+
   useEffect(() => {
     ordersApi.get(id)
       .then(d => {
         if (d.data) {
           setOrder(d.data)
+          setEditForm({ deliveryAddress: d.data.deliveryAddress || '', city: d.data.city || '', notes: d.data.notes || '' })
           if (d.data.refund) setExistingRefund(d.data.refund)
         }
       })
@@ -263,6 +290,16 @@ export default function OrderDetail() {
               </a>
             )}
 
+            {/* Edit order — customers only, pending orders */}
+            {user?.role === 'customer' && order.status === 'pending' && (
+              <button
+                onClick={() => setShowEditForm(v => !v)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:-translate-y-0.5"
+                style={{ background: 'rgba(200,139,0,0.1)', color: '#C88B00', border: '1px solid rgba(200,139,0,0.25)' }}>
+                <Pencil size={14} /> Edit Order
+              </button>
+            )}
+
             {/* Rate Seller — customers only, delivered orders */}
             {user?.role === 'customer' && order.status === 'delivered' && (
               <button
@@ -318,6 +355,63 @@ export default function OrderDetail() {
               <ArrowLeft size={14} /> All Orders
             </Link>
           </div>
+
+          {/* Edit order form — pending only */}
+          {user?.role === 'customer' && order.status === 'pending' && showEditForm && (
+            <div className="mt-4 rounded-xl p-5" style={{ background: '#FFF8E7', border: '2px solid rgba(200,139,0,0.25)' }}>
+              <p className="font-serif font-bold text-sm mb-4" style={{ color: '#C88B00' }}>Edit Delivery Details</p>
+              <div className="flex flex-col gap-3">
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: '#1C0A00' }}>
+                    Delivery Address <span style={{ color: '#D85A30' }}>*</span>
+                  </label>
+                  <input
+                    value={editForm.deliveryAddress}
+                    onChange={e => setEditForm(f => ({ ...f, deliveryAddress: e.target.value }))}
+                    placeholder="Street address, house/flat number…"
+                    maxLength={500}
+                    className="w-full px-4 py-2.5 rounded-xl text-sm outline-none"
+                    style={{ background: '#FFFCF5', border: '1.5px solid rgba(200,139,0,0.3)', color: '#1C0A00' }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: '#1C0A00' }}>
+                    City <span style={{ color: '#D85A30' }}>*</span>
+                  </label>
+                  <CitySelect value={editForm.city} onChange={v => setEditForm(f => ({ ...f, city: v }))} placeholder="Select city" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: '#1C0A00' }}>
+                    Order Notes <span style={{ color: '#A07000' }}>(optional)</span>
+                  </label>
+                  <textarea
+                    value={editForm.notes}
+                    onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))}
+                    rows={2}
+                    placeholder="Any special instructions for the vendor…"
+                    maxLength={500}
+                    className="w-full px-4 py-2.5 rounded-xl text-sm outline-none resize-none"
+                    style={{ background: '#FFFCF5', border: '1.5px solid rgba(200,139,0,0.3)', color: '#1C0A00' }}
+                  />
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <button
+                    onClick={saveOrderEdit}
+                    disabled={editLoading}
+                    className="px-5 py-2 rounded-lg text-sm font-bold disabled:opacity-60"
+                    style={{ background: '#C88B00', color: '#1C0A00' }}>
+                    {editLoading ? 'Saving…' : 'Save Changes'}
+                  </button>
+                  <button
+                    onClick={() => setShowEditForm(false)}
+                    className="px-4 py-2 rounded-lg text-sm"
+                    style={{ color: '#7A6050' }}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Existing refund note */}
           {user?.role === 'customer' && existingRefund?.adminNote && (
