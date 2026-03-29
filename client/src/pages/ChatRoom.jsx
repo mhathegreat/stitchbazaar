@@ -23,10 +23,12 @@ export default function ChatRoom() {
   const { user }                  = useAuth()
   const [convo,    setConvo]      = useState(null)
   const [msgs,     setMsgs]       = useState([])
+  const [hasMore,  setHasMore]    = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [page,     setPage]       = useState(1)
   const [text,     setText]       = useState('')
   const [sending,  setSending]    = useState(false)
   const [loading,  setLoading]    = useState(true)
-  const bottomRef                 = useRef(null)
   const messagesRef               = useRef(null)
   const inputRef                  = useRef(null)
 
@@ -35,6 +37,8 @@ export default function ChatRoom() {
       const d = await chatApi.get(id)
       setConvo(d.data.conversation)
       setMsgs(d.data.messages)
+      setHasMore(d.data.meta?.hasMore ?? false)
+      setPage(1)
       chatApi.markRead(id).catch(() => {})
     } catch {
       toast.error('Could not load chat')
@@ -45,11 +49,38 @@ export default function ChatRoom() {
 
   useEffect(() => { load() }, [load])
 
-  // Scroll the messages container to bottom (not the window)
+  // Scroll to bottom only on initial load / new messages sent
   useEffect(() => {
-    const el = messagesRef.current
-    if (el) el.scrollTop = el.scrollHeight
-  }, [msgs])
+    if (!loading) {
+      const el = messagesRef.current
+      if (el) el.scrollTop = el.scrollHeight
+    }
+  }, [loading])
+
+  // Load older messages (prepend, keep scroll position)
+  async function loadOlder() {
+    setLoadingMore(true)
+    try {
+      const nextPage = page + 1
+      const d = await chatApi.get(id, nextPage)
+      const older = d.data.messages
+      setMsgs(prev => [...older, ...prev])
+      setHasMore(d.data.meta?.hasMore ?? false)
+      setPage(nextPage)
+      // Preserve scroll position after prepend
+      const el = messagesRef.current
+      if (el) {
+        const prevHeight = el.scrollHeight
+        requestAnimationFrame(() => {
+          el.scrollTop = el.scrollHeight - prevHeight
+        })
+      }
+    } catch {
+      toast.error('Could not load older messages')
+    } finally {
+      setLoadingMore(false)
+    }
+  }
 
   // Poll for new messages every 5 seconds (SSE delivers, this is a fallback)
   useEffect(() => {
@@ -133,6 +164,18 @@ export default function ChatRoom() {
 
         {/* Messages */}
         <div ref={messagesRef} className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-1">
+
+          {/* Load older messages */}
+          {hasMore && (
+            <div className="flex justify-center pb-2">
+              <button onClick={loadOlder} disabled={loadingMore}
+                className="text-xs font-semibold px-4 py-1.5 rounded-full transition-opacity disabled:opacity-50"
+                style={{ background: 'rgba(200,139,0,0.12)', color: '#A07000' }}>
+                {loadingMore ? 'Loading…' : '↑ Load older messages'}
+              </button>
+            </div>
+          )}
+
           {msgs.length === 0 && (
             <p className="text-center text-sm py-8" style={{ color: '#C8B89A' }}>
               No messages yet. Say hello!
@@ -179,7 +222,6 @@ export default function ChatRoom() {
             </div>
           ))}
 
-          <div ref={bottomRef} />
         </div>
 
         {/* Input */}

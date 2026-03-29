@@ -108,7 +108,7 @@ export async function listConversations(req, res, next) {
 // ── Get conversation + messages ──────────────────────────────────────────────
 export async function getConversation(req, res, next) {
   try {
-    const { page = 1, limit = 50 } = req.query
+    const { page = 1, limit = 500 } = req.query
 
     const conversation = await prisma.conversation.findUnique({
       where:   { id: req.params.id },
@@ -124,15 +124,28 @@ export async function getConversation(req, res, next) {
       if (conversation.customerId !== req.user.id) return res.status(403).json({ success: false, message: 'Access denied' })
     }
 
-    const messages = await prisma.message.findMany({
-      where:   { conversationId: req.params.id },
-      orderBy: { createdAt: 'asc' },
-      skip:    (Number(page) - 1) * Number(limit),
-      take:    Number(limit),
-      include: { sender: { select: { id: true, name: true } } },
-    })
+    const pageNum  = Math.max(1, Number(page))
+    const limitNum = Math.min(1000, Math.max(1, Number(limit)))  // cap at 1000
 
-    res.json({ success: true, data: { conversation, messages } })
+    const [messages, total] = await Promise.all([
+      prisma.message.findMany({
+        where:   { conversationId: req.params.id },
+        orderBy: { createdAt: 'asc' },
+        skip:    (pageNum - 1) * limitNum,
+        take:    limitNum,
+        include: { sender: { select: { id: true, name: true } } },
+      }),
+      prisma.message.count({ where: { conversationId: req.params.id } }),
+    ])
+
+    res.json({
+      success: true,
+      data: {
+        conversation,
+        messages,
+        meta: { total, page: pageNum, limit: limitNum, hasMore: pageNum * limitNum < total },
+      },
+    })
   } catch (err) { next(err) }
 }
 

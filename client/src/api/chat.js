@@ -10,8 +10,8 @@ export const chatApi = {
   list: () =>
     api.get('/conversations').then(r => r.data),
 
-  get: (id, page = 1) =>
-    api.get(`/conversations/${id}`, { params: { page } }).then(r => r.data),
+  get: (id, page = 1, limit = 500) =>
+    api.get(`/conversations/${id}`, { params: { page, limit } }).then(r => r.data),
 
   send: (id, body) =>
     api.post(`/conversations/${id}/messages`, { body }).then(r => r.data),
