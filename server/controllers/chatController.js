@@ -50,6 +50,30 @@ export async function startConversation(req, res, next) {
   } catch (err) { next(err) }
 }
 
+// ── Admin-initiated conversation with a customer ─────────────────────────────
+export async function startConversationAsAdmin(req, res, next) {
+  try {
+    if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'Admins only' })
+
+    const { customerId } = req.body
+    if (!customerId) return res.status(400).json({ success: false, message: 'customerId required' })
+
+    let conversation = await prisma.conversation.findFirst({
+      where:   { customerId, adminId: req.user.id },
+      include: { customer: { select: { id: true, name: true } } },
+    })
+
+    if (!conversation) {
+      conversation = await prisma.conversation.create({
+        data:    { customerId, adminId: req.user.id },
+        include: { customer: { select: { id: true, name: true } } },
+      })
+    }
+
+    res.json({ success: true, data: conversation })
+  } catch (err) { next(err) }
+}
+
 // ── Vendor-initiated conversation (uses req.user to look up vendor) ──────────
 export async function startConversationAsVendor(req, res, next) {
   try {
@@ -84,6 +108,8 @@ export async function listConversations(req, res, next) {
       const vendor = await prisma.vendor.findUnique({ where: { userId: req.user.id } })
       if (!vendor) return res.status(404).json({ success: false, message: 'Vendor not found' })
       where = { vendorId: vendor.id }
+    } else if (req.user.role === 'admin') {
+      where = { adminId: req.user.id }
     } else {
       where = { customerId: req.user.id }
     }
@@ -122,6 +148,8 @@ export async function getConversation(req, res, next) {
       if (!vendor || conversation.vendorId !== vendor.id) return res.status(403).json({ success: false, message: 'Access denied' })
     } else if (req.user.role === 'customer') {
       if (conversation.customerId !== req.user.id) return res.status(403).json({ success: false, message: 'Access denied' })
+    } else if (req.user.role === 'admin') {
+      if (conversation.adminId !== req.user.id) return res.status(403).json({ success: false, message: 'Access denied' })
     }
 
     const pageNum  = Math.max(1, Number(page))
@@ -173,6 +201,8 @@ export async function sendMessage(req, res, next) {
       if (!vendor || conversation.vendorId !== vendor.id) return res.status(403).json({ success: false, message: 'Access denied' })
     } else if (req.user.role === 'customer') {
       if (conversation.customerId !== req.user.id) return res.status(403).json({ success: false, message: 'Access denied' })
+    } else if (req.user.role === 'admin') {
+      if (conversation.adminId !== req.user.id) return res.status(403).json({ success: false, message: 'Access denied' })
     }
 
     const { body, imageUrl } = parsed.data
@@ -192,7 +222,9 @@ export async function sendMessage(req, res, next) {
     // Push SSE to the OTHER party
     const recipientId = req.user.role === 'vendor'
       ? conversation.customerId
-      : conversation.vendor.userId
+      : req.user.role === 'admin'
+        ? conversation.customerId
+        : (conversation.adminId ?? conversation.vendor?.userId)
 
     const recipientPrefs = await prisma.user.findUnique({ where: { id: recipientId }, select: { notificationPrefs: true } })
     if (!recipientPrefs?.notificationPrefs?.mute_new_message) {

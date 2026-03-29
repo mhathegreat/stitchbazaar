@@ -164,8 +164,9 @@ export default function ChatRoom() {
   )
 
   const isVendor  = user?.role === 'vendor'
-  const otherName = isVendor ? convo?.customer?.name : convo?.vendor?.shopName
-  const backPath  = isVendor ? '/vendor/messages' : '/messages'
+  const isAdmin   = user?.role === 'admin'
+  const otherName = (isVendor || isAdmin) ? convo?.customer?.name : convo?.vendor?.shopName
+  const backPath  = isVendor ? '/vendor/messages' : isAdmin ? '/admin/messages' : '/messages'
 
   // Group messages by date
   const grouped = msgs.reduce((acc, msg) => {

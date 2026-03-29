@@ -134,6 +134,8 @@ function AppShell() {
         <Route path="/messages/:id"          element={<ProtectedRoute><ChatRoom /></ProtectedRoute>} />
         <Route path="/vendor/messages"       element={<ProtectedRoute role="vendor"><Messages /></ProtectedRoute>} />
         <Route path="/vendor/messages/:id"   element={<ProtectedRoute role="vendor"><ChatRoom /></ProtectedRoute>} />
+        <Route path="/admin/messages"        element={<ProtectedRoute role="admin"><Messages /></ProtectedRoute>} />
+        <Route path="/admin/messages/:id"    element={<ProtectedRoute role="admin"><ChatRoom /></ProtectedRoute>} />
 
         {/* ── Notifications ── */}
         <Route path="/notifications"         element={<ProtectedRoute><Notifications /></ProtectedRoute>} />

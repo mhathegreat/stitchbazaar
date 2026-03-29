@@ -3,11 +3,12 @@
  */
 
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { AlertTriangle, Eye } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { AlertTriangle, Eye, MessageCircle } from 'lucide-react'
 import AdminLayout from './AdminLayout.jsx'
 import { formatPrice } from '../../styles/theme.js'
 import { adminApi } from '../../api/admin.js'
+import { chatApi } from '../../api/chat.js'
 import toast from 'react-hot-toast'
 
 const STATUS_COLORS = {
@@ -18,9 +19,23 @@ const STATUS_COLORS = {
 }
 
 export default function AdminDisputes() {
-  const [disputes, setDisputes] = useState([])
-  const [loading,  setLoading]  = useState(true)
-  const [filter,   setFilter]   = useState('all')
+  const navigate = useNavigate()
+  const [disputes,     setDisputes]     = useState([])
+  const [loading,      setLoading]      = useState(true)
+  const [filter,       setFilter]       = useState('all')
+  const [startingChat, setStartingChat] = useState(null)
+
+  async function startChat(customerId) {
+    setStartingChat(customerId)
+    try {
+      const d = await chatApi.startAsAdmin(customerId)
+      navigate(`/admin/messages/${d.data.id}`)
+    } catch {
+      toast.error('Could not start chat')
+    } finally {
+      setStartingChat(null)
+    }
+  }
 
   useEffect(() => {
     const params = filter !== 'all' ? { status: filter } : {}
@@ -131,6 +146,13 @@ export default function AdminDisputes() {
                       </button>
                     </div>
                   )}
+                  <button
+                    onClick={() => startChat(d.customer.id)}
+                    disabled={startingChat === d.customer.id}
+                    className="flex items-center gap-1 text-xs font-semibold disabled:opacity-60 hover:underline"
+                    style={{ color: '#457B9D' }}>
+                    <MessageCircle size={12} /> {startingChat === d.customer.id ? 'Opening…' : 'Chat with Customer'}
+                  </button>
                   <Link to={`/customer/orders/${d.order.id}`}
                     className="flex items-center gap-1 text-xs font-semibold hover:underline"
                     style={{ color: '#457B9D' }}>

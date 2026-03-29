@@ -5,10 +5,13 @@
  */
 
 import { useState, useEffect } from 'react'
-import { RotateCcw } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { RotateCcw, MessageCircle } from 'lucide-react'
 import VendorLayout from './VendorLayout.jsx'
 import { vendorsApi } from '../../api/vendors.js'
+import { chatApi } from '../../api/chat.js'
 import { formatPrice } from '../../styles/theme.js'
+import toast from 'react-hot-toast'
 
 const STATUS = {
   pending:  { label: 'Pending',  color: '#C88B00', bg: 'rgba(200,139,0,0.1)'  },
@@ -17,9 +20,11 @@ const STATUS = {
 }
 
 export default function VendorRefunds() {
-  const [refunds, setRefunds] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [filter,  setFilter]  = useState('')
+  const navigate = useNavigate()
+  const [refunds,      setRefunds]      = useState([])
+  const [loading,      setLoading]      = useState(true)
+  const [filter,       setFilter]       = useState('')
+  const [startingChat, setStartingChat] = useState(null)
 
   useEffect(() => {
     vendorsApi.refunds()
@@ -27,6 +32,18 @@ export default function VendorRefunds() {
       .catch(() => setRefunds([]))
       .finally(() => setLoading(false))
   }, [])
+
+  async function startChat(customerId) {
+    setStartingChat(customerId)
+    try {
+      const d = await chatApi.startAsVendor(customerId)
+      navigate(`/vendor/messages/${d.data.id}`)
+    } catch {
+      toast.error('Could not start chat')
+    } finally {
+      setStartingChat(null)
+    }
+  }
 
   const visible = filter
     ? refunds.filter(r => r.status === filter)
@@ -99,6 +116,12 @@ export default function VendorRefunds() {
 
                       {/* Customer + order */}
                       <p className="font-semibold text-sm" style={{ color: '#1C0A00' }}>{customerName}</p>
+                      {(r.customer?.email || r.customer?.phone) && (
+                        <p className="text-xs mt-0.5" style={{ color: '#7A6050' }}>
+                          {r.customer?.email}
+                          {r.customer?.phone && <span> · 📱 {r.customer.phone}</span>}
+                        </p>
+                      )}
                       <p className="text-xs mt-0.5" style={{ color: '#7A6050' }}>
                         Order: <span className="font-mono">{r.orderId?.slice(-8).toUpperCase()}</span>
                         {' · '}Placed: {orderDate}
@@ -121,6 +144,18 @@ export default function VendorRefunds() {
                         </p>
                       )}
                     </div>
+
+                    {/* Chat button */}
+                    {r.customer?.id && (
+                      <button
+                        onClick={() => startChat(r.customer.id)}
+                        disabled={startingChat === r.customer.id}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold shrink-0 disabled:opacity-60"
+                        style={{ background: 'rgba(69,123,157,0.1)', color: '#457B9D' }}>
+                        <MessageCircle size={12} />
+                        {startingChat === r.customer.id ? 'Opening…' : 'Chat with Customer'}
+                      </button>
+                    )}
                   </div>
                 </div>
               )

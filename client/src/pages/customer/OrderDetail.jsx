@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, CheckCircle, Clock, Package, Truck, XCircle, MessageCircle, Printer, RotateCcw } from 'lucide-react'
+import { ArrowLeft, CheckCircle, Clock, Package, Truck, XCircle, MessageCircle, Printer, RotateCcw, Star } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../../api/client.js'
 import PageWrapper from '../../components/layout/PageWrapper.jsx'
@@ -40,6 +40,11 @@ export default function OrderDetail() {
   const [existingRefund,  setExistingRefund] = useState(null)
   const [refundLoading,   setRefundLoading]  = useState(false)
   const [showRefundForm,  setShowRefundForm] = useState(false)
+  const [showVendorRating,  setShowVendorRating]  = useState(false)
+  const [vendorRating,      setVendorRating]      = useState(0)
+  const [vendorComment,     setVendorComment]     = useState('')
+  const [ratingVendorId,    setRatingVendorId]    = useState('')
+  const [submittingRating,  setSubmittingRating]  = useState(false)
 
   async function submitRefund() {
     if (!refundReason.trim() || refundReason.trim().length < 10) {
@@ -60,6 +65,26 @@ export default function OrderDetail() {
       toast.error(err?.response?.data?.message || 'Could not submit refund request')
     } finally {
       setRefundLoading(false)
+    }
+  }
+
+  async function submitVendorRating() {
+    if (!vendorRating) { toast.error('Please pick a star rating'); return }
+    setSubmittingRating(true)
+    try {
+      await api.post(`/vendors/${ratingVendorId}/reviews`, {
+        orderId: order.id,
+        rating:  vendorRating,
+        comment: vendorComment.trim() || undefined,
+      })
+      setShowVendorRating(false)
+      setVendorRating(0)
+      setVendorComment('')
+      toast.success('Seller review submitted!')
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Could not submit review')
+    } finally {
+      setSubmittingRating(false)
     }
   }
 
@@ -238,6 +263,20 @@ export default function OrderDetail() {
               </a>
             )}
 
+            {/* Rate Seller — customers only, delivered orders */}
+            {user?.role === 'customer' && order.status === 'delivered' && (
+              <button
+                onClick={() => {
+                  const v = order.items?.[0]?.vendor
+                  if (v) setRatingVendorId(v.id)
+                  setShowVendorRating(v => !v)
+                }}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:-translate-y-0.5"
+                style={{ background: 'rgba(200,139,0,0.1)', color: '#C88B00', border: '1px solid rgba(200,139,0,0.25)' }}>
+                <Star size={14} /> Rate this Seller
+              </button>
+            )}
+
             {/* Dispute + Refund — customers only */}
             {user?.role === 'customer' && order.status === 'delivered' && (
               <Link to={`/customer/orders/${order.id}/dispute`}
@@ -312,6 +351,41 @@ export default function OrderDetail() {
                   onClick={() => setShowRefundForm(false)}
                   className="px-4 py-2 rounded-lg text-sm"
                   style={{ color: '#7A6050' }}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Vendor rating form */}
+          {showVendorRating && order.status === 'delivered' && (
+            <div className="mt-4 rounded-xl p-4" style={{ background: '#FFF8E7', border: '2px solid rgba(200,139,0,0.2)' }}>
+              <p className="font-semibold text-sm mb-3" style={{ color: '#C88B00' }}>Rate this Seller</p>
+              <div className="flex gap-1 mb-3">
+                {[1,2,3,4,5].map(n => (
+                  <button key={n} type="button" onClick={() => setVendorRating(n)}>
+                    <Star size={22}
+                      fill={vendorRating >= n ? '#C88B00' : 'none'}
+                      stroke={vendorRating >= n ? '#C88B00' : '#D4C4A8'} />
+                  </button>
+                ))}
+              </div>
+              <textarea
+                value={vendorComment}
+                onChange={e => setVendorComment(e.target.value)}
+                rows={2}
+                placeholder="Share your experience with this seller (optional)…"
+                className="w-full px-3 py-2.5 rounded-xl text-sm outline-none mb-3"
+                style={{ background: '#FFFCF5', border: '1.5px solid rgba(200,139,0,0.3)', color: '#1C0A00' }}
+              />
+              <div className="flex gap-2">
+                <button onClick={submitVendorRating} disabled={submittingRating || !vendorRating}
+                  className="px-4 py-2 rounded-lg text-sm font-bold disabled:opacity-60"
+                  style={{ background: '#C88B00', color: '#1C0A00' }}>
+                  {submittingRating ? 'Submitting…' : 'Submit Review'}
+                </button>
+                <button onClick={() => setShowVendorRating(false)}
+                  className="px-4 py-2 rounded-lg text-sm" style={{ color: '#7A6050' }}>
                   Cancel
                 </button>
               </div>

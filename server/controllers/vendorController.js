@@ -81,7 +81,8 @@ export async function getVendor(req, res, next) {
             stock: true, category: { select: { name: true } },
           },
         },
-        _count: { select: { products: true, orderItems: true } },
+        _count:        { select: { products: true, orderItems: true, vendorReviews: true } },
+        vendorReviews: { select: { rating: true }, take: 500 },
       },
     })
 
@@ -89,7 +90,11 @@ export async function getVendor(req, res, next) {
       return res.status(404).json({ success: false, message: 'Vendor not found' })
     }
 
-    res.json({ success: true, data: vendor })
+    const avgRating = vendor.vendorReviews.length
+      ? +(vendor.vendorReviews.reduce((s, r) => s + r.rating, 0) / vendor.vendorReviews.length).toFixed(1)
+      : null
+
+    res.json({ success: true, data: { ...vendor, avgRating } })
   } catch (err) {
     next(err)
   }
@@ -470,7 +475,7 @@ export async function getVendorRefunds(req, res, next) {
             guestName: true,
           },
         },
-        customer: { select: { name: true, email: true } },
+        customer: { select: { id: true, name: true, email: true, phone: true } },
       },
     })
 

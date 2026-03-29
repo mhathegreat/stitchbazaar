@@ -8,6 +8,7 @@ import {
   updateVendorOrderStatus, getVendorDisputes, getVendorRefunds, processVendorRefund,
   getVendorCounts,
 } from '../controllers/vendorController.js'
+import { listVendorReviews, submitVendorReview } from '../controllers/vendorReviewController.js'
 
 const router = Router()
 router.use(generalLimiter)
@@ -30,6 +31,8 @@ router.get('/refunds',                     requireAuth, requireRole('vendor'), g
 router.put('/refunds/:id/process',         requireAuth, requireRole('vendor'), processVendorRefund)
 
 // ── Public vendor storefront — must be LAST so named routes win ───
-router.get('/:id', getVendor)
+router.get('/:id/reviews',  listVendorReviews)
+router.post('/:id/reviews', requireAuth, submitVendorReview)
+router.get('/:id',          getVendor)
 
 export default router

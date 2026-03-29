@@ -112,7 +112,7 @@ export async function listRefunds(req, res, next) {
         take:    Number(limit),
         orderBy: { createdAt: 'desc' },
         include: {
-          customer: { select: { name: true, email: true } },
+          customer: { select: { id: true, name: true, email: true, phone: true } },
           order:    { select: { totalAmount: true, status: true } },
         },
       }),

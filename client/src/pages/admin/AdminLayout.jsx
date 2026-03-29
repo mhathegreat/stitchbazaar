@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom'
 import {
   LayoutDashboard, Store, Package, ShoppingBag,
   DollarSign, AlertTriangle, Tag, LogOut,
-  Ticket, Truck, RotateCcw, Shield, Menu, X, Settings,
+  Ticket, Truck, RotateCcw, Shield, Menu, X, Settings, MessageCircle,
 } from 'lucide-react'
 import PageWrapper from '../../components/layout/PageWrapper.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
@@ -26,7 +26,8 @@ const NAV = [
   { to: '/admin/shipping',   label: 'Shipping',   icon: <Truck size={16} />           },
   { to: '/admin/refunds',    label: 'Refunds',    icon: <RotateCcw size={16} />,      countKey: 'pendingRefunds'  },
   { to: '/admin/audit',      label: 'Audit Log',  icon: <Shield size={16} />          },
-  { to: '/admin/settings',  label: 'Settings',   icon: <Settings size={16} />        },
+  { to: '/admin/messages',   label: 'Messages',   icon: <MessageCircle size={16} />   },
+  { to: '/admin/settings',   label: 'Settings',   icon: <Settings size={16} />        },
 ]
 
 function Badge({ count }) {

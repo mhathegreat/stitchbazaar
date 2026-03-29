@@ -1,11 +1,11 @@
 /**
  * Vendor Storefront page — /vendors/:id
- * Mosaic banner in vendor's color, about section, product grid.
+ * Mosaic banner, about section, product grid, seller reviews.
  */
 
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { MapPin, Package, Star, MessageCircle, Loader2 } from 'lucide-react'
+import { MapPin, Package, Star, MessageCircle, Loader2, Send } from 'lucide-react'
 
 import PageWrapper    from '../../components/layout/PageWrapper.jsx'
 import ProductGrid    from '../../components/product/ProductGrid.jsx'
@@ -13,20 +13,60 @@ import BeadDots       from '../../components/mosaic/BeadDots.jsx'
 import ColorBlob      from '../../components/mosaic/ColorBlob.jsx'
 import DiamondMotif   from '../../components/mosaic/DiamondMotif.jsx'
 import BrushstrokeHeading from '../../components/mosaic/BrushstrokeHeading.jsx'
-import { vendorTheme, formatPrice } from '../../styles/theme.js'
 import { vendorsApi } from '../../api/vendors.js'
 import { chatApi }    from '../../api/chat.js'
 import { useAuth }    from '../../context/AuthContext.jsx'
+import api            from '../../api/client.js'
 import toast from 'react-hot-toast'
+
+function Stars({ rating, size = 14 }) {
+  return (
+    <span className="inline-flex gap-0.5">
+      {[1,2,3,4,5].map(n => (
+        <Star key={n} size={size}
+          fill={n <= Math.round(rating) ? '#C88B00' : 'none'}
+          stroke={n <= Math.round(rating) ? '#C88B00' : '#D4C4A8'} />
+      ))}
+    </span>
+  )
+}
+
+function StarPicker({ value, onChange }) {
+  const [hovered, setHovered] = useState(0)
+  return (
+    <span className="inline-flex gap-1">
+      {[1,2,3,4,5].map(n => (
+        <button key={n} type="button"
+          onMouseEnter={() => setHovered(n)}
+          onMouseLeave={() => setHovered(0)}
+          onClick={() => onChange(n)}>
+          <Star size={24}
+            fill={(hovered || value) >= n ? '#C88B00' : 'none'}
+            stroke={(hovered || value) >= n ? '#C88B00' : '#D4C4A8'} />
+        </button>
+      ))}
+    </span>
+  )
+}
 
 export default function VendorShop() {
   const { id }      = useParams()
   const navigate    = useNavigate()
   const { user }    = useAuth()
-  const [vendor,       setVendor]       = useState(null)
-  const [loading,      setLoading]      = useState(true)
-  const [error,        setError]        = useState(false)
-  const [startingChat, setStartingChat] = useState(false)
+  const [vendor,         setVendor]         = useState(null)
+  const [loading,        setLoading]        = useState(true)
+  const [error,          setError]          = useState(false)
+  const [startingChat,   setStartingChat]   = useState(false)
+
+  // Reviews
+  const [reviews,        setReviews]        = useState([])
+  const [reviewsLoading, setReviewsLoading] = useState(false)
+  const [showReviewForm, setShowReviewForm] = useState(false)
+  const [reviewRating,   setReviewRating]   = useState(0)
+  const [reviewComment,  setReviewComment]  = useState('')
+  const [eligibleOrders, setEligibleOrders] = useState([]) // delivered orders from this vendor
+  const [reviewOrderId,  setReviewOrderId]  = useState('')
+  const [submittingReview, setSubmittingReview] = useState(false)
 
   async function startChat() {
     if (!vendor) return
@@ -41,6 +81,51 @@ export default function VendorShop() {
     }
   }
 
+  async function loadReviews() {
+    setReviewsLoading(true)
+    try {
+      const r = await api.get(`/vendors/${id}/reviews`)
+      setReviews(r.data?.data || [])
+    } catch { /* ignore */ }
+    finally { setReviewsLoading(false) }
+  }
+
+  async function loadEligibleOrders() {
+    if (!user || user.role !== 'customer') return
+    try {
+      const r = await api.get('/orders', { params: { status: 'delivered', limit: 50 } })
+      const eligible = (r.data?.data || []).filter(o =>
+        o.items?.some(item => item.vendor?.id === id)
+      )
+      setEligibleOrders(eligible)
+      if (eligible.length) setReviewOrderId(eligible[0].id)
+    } catch { /* ignore */ }
+  }
+
+  async function submitReview(e) {
+    e.preventDefault()
+    if (!reviewRating) { toast.error('Please pick a star rating'); return }
+    if (!reviewOrderId) { toast.error('No eligible order found'); return }
+    setSubmittingReview(true)
+    try {
+      const r = await api.post(`/vendors/${id}/reviews`, {
+        orderId: reviewOrderId,
+        rating:  reviewRating,
+        comment: reviewComment.trim() || undefined,
+      })
+      const newReview = r.data?.data
+      setReviews(prev => [newReview, ...prev.filter(rv => rv.id !== newReview.id)])
+      setShowReviewForm(false)
+      setReviewRating(0)
+      setReviewComment('')
+      toast.success('Review submitted!')
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Could not submit review')
+    } finally {
+      setSubmittingReview(false)
+    }
+  }
+
   useEffect(() => {
     setLoading(true)
     setError(false)
@@ -48,6 +133,9 @@ export default function VendorShop() {
       .then(d => setVendor(d.data))
       .catch(() => { toast.error('Could not load vendor shop'); setError(true) })
       .finally(() => setLoading(false))
+    loadReviews()
+    loadEligibleOrders()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
   if (error) return (
@@ -70,10 +158,12 @@ export default function VendorShop() {
     </PageWrapper>
   )
 
-  const accent = vendor.colorTheme
+  const accent       = vendor.colorTheme
+  const reviewCount  = vendor._count?.vendorReviews ?? 0
+  const avgRating    = vendor.avgRating
 
   return (
-    <PageWrapper title={vendor.shopName} description={`${vendor.shopDescription.slice(0, 140)} — Shop on StitchBazaar`}>
+    <PageWrapper title={vendor.shopName} description={`${vendor.shopDescription?.slice(0, 140) ?? ''} — Shop on StitchBazaar`}>
 
       {/* ── Banner ── */}
       <section className="relative overflow-hidden" style={{ background: accent, minHeight: 220 }}>
@@ -98,9 +188,9 @@ export default function VendorShop() {
               <span className="flex items-center gap-1 text-sm" style={{ color: 'rgba(255,252,245,0.8)' }}>
                 <Package size={13} /> {vendor._count?.products ?? 0} products
               </span>
-              {vendor.avgRating > 0 && (
+              {avgRating > 0 && (
                 <span className="flex items-center gap-1 text-sm" style={{ color: 'rgba(255,252,245,0.8)' }}>
-                  <Star size={13} fill="rgba(255,252,245,0.8)" stroke="none" /> {vendor.avgRating} ({vendor.reviewCount || 0} reviews)
+                  <Star size={13} fill="rgba(255,252,245,0.8)" stroke="none" /> {avgRating} ({reviewCount} reviews)
                 </span>
               )}
             </div>
@@ -108,8 +198,8 @@ export default function VendorShop() {
 
           {/* CTA buttons */}
           <div className="ml-auto hidden sm:flex items-center gap-2 flex-wrap">
-            {vendor.phone && (
-              <a href={`https://wa.me/${vendor.phone.replace(/\D/g,'').replace(/^0/,'92')}`} target="_blank" rel="noopener noreferrer"
+            {vendor.whatsapp && (
+              <a href={`https://wa.me/${vendor.whatsapp.replace(/\D/g,'').replace(/^0/,'92')}`} target="_blank" rel="noopener noreferrer"
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all hover:-translate-y-0.5"
                 style={{ background: '#1C0A00', color: '#C88B00' }}>
                 <MessageCircle size={15} style={{ color: '#2DC653' }} /> WhatsApp
@@ -131,12 +221,11 @@ export default function VendorShop() {
         {/* Stats bar */}
         <div className="grid grid-cols-3 gap-4 mb-8">
           {[
-            { label: 'Products',  value: vendor._count?.products ?? vendor.productCount ?? 0, color: accent },
-            { label: 'Sales',     value: vendor._count?.orderItems ?? vendor.totalSales ?? 0, color: '#D85A30' },
-            { label: 'Joined',    value: new Date(vendor.createdAt || Date.now()).getFullYear(), color: '#0F6E56' },
+            { label: 'Products', value: vendor._count?.products ?? 0,    color: accent },
+            { label: 'Sales',    value: vendor._count?.orderItems ?? 0,  color: '#D85A30' },
+            { label: 'Joined',   value: new Date(vendor.createdAt || Date.now()).getFullYear(), color: '#0F6E56' },
           ].map(s => (
-            <div key={s.label} className="rounded-xl p-4 text-center mosaic-block"
-              style={{ background: '#FFF8E7' }}>
+            <div key={s.label} className="rounded-xl p-4 text-center mosaic-block" style={{ background: '#FFF8E7' }}>
               <p className="font-serif font-bold text-2xl" style={{ color: s.color }}>{s.value}</p>
               <p className="text-xs font-medium mt-1" style={{ color: '#7A6050' }}>{s.label}</p>
             </div>
@@ -158,11 +247,119 @@ export default function VendorShop() {
         </BrushstrokeHeading>
         <ProductGrid products={(vendor.products || []).map(p => ({
           ...p,
-          vendorId:   vendor.id,
-          vendorName: vendor.shopName,
-          rating:     p.rating     || 0,
-          reviewCount:p.reviewCount|| 0,
+          vendorId:    vendor.id,
+          vendorName:  vendor.shopName,
+          rating:      p.rating      || 0,
+          reviewCount: p.reviewCount || 0,
         }))} />
+
+        {/* ── Seller Reviews ── */}
+        <div className="mt-12">
+          <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+            <BrushstrokeHeading align="left">
+              <span style={{ color: '#1C0A00' }}>Seller </span>
+              <span style={{ color: accent }}>Reviews</span>
+              {reviewCount > 0 && (
+                <span className="ml-2 text-sm font-normal" style={{ color: '#7A6050' }}>
+                  ({reviewCount})
+                </span>
+              )}
+            </BrushstrokeHeading>
+
+            {avgRating > 0 && (
+              <div className="flex items-center gap-2">
+                <Stars rating={avgRating} size={16} />
+                <span className="font-bold text-lg" style={{ color: '#C88B00' }}>{avgRating}</span>
+                <span className="text-sm" style={{ color: '#7A6050' }}>/ 5</span>
+              </div>
+            )}
+          </div>
+
+          {/* Write a review */}
+          {user?.role === 'customer' && eligibleOrders.length > 0 && (
+            <div className="mb-6 rounded-xl p-5" style={{ background: '#FFF8E7', border: '2px solid rgba(200,139,0,0.2)' }}>
+              {!showReviewForm ? (
+                <button onClick={() => setShowReviewForm(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all hover:-translate-y-0.5"
+                  style={{ background: accent, color: '#FFFCF5' }}>
+                  <Star size={14} /> Write a Review
+                </button>
+              ) : (
+                <form onSubmit={submitReview} className="flex flex-col gap-4">
+                  <h3 className="font-serif font-bold text-base" style={{ color: '#1C0A00' }}>Your Review</h3>
+
+                  <div>
+                    <p className="text-sm font-medium mb-2" style={{ color: '#1C0A00' }}>Rating</p>
+                    <StarPicker value={reviewRating} onChange={setReviewRating} />
+                  </div>
+
+                  {eligibleOrders.length > 1 && (
+                    <div>
+                      <label className="block text-sm font-medium mb-1" style={{ color: '#1C0A00' }}>Order</label>
+                      <select value={reviewOrderId} onChange={e => setReviewOrderId(e.target.value)}
+                        className="px-3 py-2 rounded-xl text-sm outline-none"
+                        style={{ background: '#FFFCF5', border: '1.5px solid rgba(200,139,0,0.3)', color: '#1C0A00' }}>
+                        {eligibleOrders.map(o => (
+                          <option key={o.id} value={o.id}>Order #{o.id.slice(-8).toUpperCase()}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  <textarea
+                    value={reviewComment}
+                    onChange={e => setReviewComment(e.target.value)}
+                    placeholder="Share your experience with this seller (optional)…"
+                    rows={3}
+                    className="w-full px-4 py-3 rounded-xl text-sm outline-none resize-none"
+                    style={{ background: '#FFFCF5', border: '1.5px solid rgba(200,139,0,0.3)', color: '#1C0A00' }}
+                  />
+
+                  <div className="flex gap-2">
+                    <button type="submit" disabled={submittingReview || !reviewRating}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold disabled:opacity-60"
+                      style={{ background: '#C88B00', color: '#1C0A00' }}>
+                      <Send size={13} /> {submittingReview ? 'Submitting…' : 'Submit Review'}
+                    </button>
+                    <button type="button" onClick={() => setShowReviewForm(false)}
+                      className="px-4 py-2.5 rounded-xl text-sm" style={{ color: '#7A6050' }}>
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          )}
+
+          {/* Reviews list */}
+          {reviewsLoading ? (
+            <div className="flex flex-col gap-3">
+              {[1,2,3].map(i => <div key={i} className="skeleton h-20 rounded-xl" />)}
+            </div>
+          ) : reviews.length === 0 ? (
+            <div className="text-center py-10">
+              <Star size={36} className="mx-auto mb-2 opacity-20" style={{ color: '#C88B00' }} />
+              <p className="text-sm" style={{ color: '#7A6050' }}>No reviews yet for this seller.</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {reviews.map(r => (
+                <div key={r.id} className="rounded-xl p-4" style={{ background: '#FFF8E7', border: '1.5px solid rgba(200,139,0,0.12)' }}>
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <div>
+                      <span className="font-semibold text-sm" style={{ color: '#1C0A00' }}>{r.customer?.name}</span>
+                      <span className="text-xs ml-2" style={{ color: '#A07000' }}>
+                        {new Date(r.createdAt).toLocaleDateString('en-PK', { dateStyle: 'medium' })}
+                      </span>
+                    </div>
+                    <Stars rating={r.rating} size={13} />
+                  </div>
+                  {r.comment && <p className="text-sm mt-1" style={{ color: '#3A2010' }}>{r.comment}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </PageWrapper>
   )

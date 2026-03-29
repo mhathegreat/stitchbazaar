@@ -2,13 +2,14 @@ import { Router } from 'express'
 import { requireAuth } from '../middleware/auth.js'
 import { generalLimiter } from '../middleware/rateLimiter.js'
 import {
-  startConversation, startConversationAsVendor, listConversations, getConversation,
-  sendMessage, markRead,
+  startConversation, startConversationAsVendor, startConversationAsAdmin,
+  listConversations, getConversation, sendMessage, markRead,
 } from '../controllers/chatController.js'
 
 const router = Router()
 router.use(generalLimiter, requireAuth)
 
+router.post('/as-admin',             startConversationAsAdmin)
 router.post('/as-vendor',            startConversationAsVendor)
 router.post('/',                     startConversation)
 router.get('/',                      listConversations)

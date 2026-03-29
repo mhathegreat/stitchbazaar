@@ -33,9 +33,15 @@ export default function Messages() {
   }, [])
 
   const isVendor = user?.role === 'vendor'
+  const isAdmin  = user?.role === 'admin'
+
+  function convoName(c) {
+    if (isVendor || isAdmin) return c.customer?.name
+    return c.vendor?.shopName
+  }
 
   const filtered = convos.filter(c => {
-    const name = isVendor ? c.customer?.name : c.vendor?.shopName
+    const name = convoName(c)
     return !search || name?.toLowerCase().includes(search.toLowerCase())
   })
 
@@ -80,13 +86,14 @@ export default function Messages() {
           ) : (
             <div className="flex flex-col gap-2">
               {filtered.map(c => {
-                const name    = isVendor ? c.customer?.name : c.vendor?.shopName
+                const name    = convoName(c)
                 const avatar  = (name || '?')[0].toUpperCase()
                 const preview = c.messages?.[0]
                 const unread  = preview && !preview.readAt && preview.senderId !== user?.id
+                const href    = isVendor ? `/vendor/messages/${c.id}` : isAdmin ? `/admin/messages/${c.id}` : `/messages/${c.id}`
 
                 return (
-                  <Link key={c.id} to={isVendor ? `/vendor/messages/${c.id}` : `/messages/${c.id}`}
+                  <Link key={c.id} to={href}
                     className="flex items-center gap-3 p-4 rounded-xl transition-all hover:-translate-y-0.5"
                     style={{ background: '#FFF8E7', border: `1.5px solid ${unread ? 'rgba(200,139,0,0.4)' : 'rgba(200,139,0,0.15)'}` }}>
                     <div className="w-11 h-11 rounded-full flex items-center justify-center font-bold text-base shrink-0"

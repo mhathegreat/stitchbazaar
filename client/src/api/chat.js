@@ -7,6 +7,9 @@ export const chatApi = {
   startAsVendor: (customerId) =>
     api.post('/conversations/as-vendor', { customerId }).then(r => r.data),
 
+  startAsAdmin: (customerId) =>
+    api.post('/conversations/as-admin', { customerId }).then(r => r.data),
+
   list: () =>
     api.get('/conversations').then(r => r.data),
 

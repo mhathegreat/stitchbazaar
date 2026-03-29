@@ -4,10 +4,12 @@
  */
 
 import { useState, useEffect } from 'react'
-import { RotateCcw, CheckCircle, XCircle } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { RotateCcw, CheckCircle, XCircle, MessageCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import AdminLayout from './AdminLayout.jsx'
 import api from '../../api/client.js'
+import { chatApi } from '../../api/chat.js'
 import { formatPrice } from '../../styles/theme.js'
 
 const STATUS_COLOR = {
@@ -17,11 +19,25 @@ const STATUS_COLOR = {
 }
 
 export default function AdminRefunds() {
+  const navigate = useNavigate()
   const [refunds,     setRefunds]     = useState([])
   const [loading,     setLoading]     = useState(true)
   const [filter,      setFilter]      = useState('')
   const [processing,  setProcessing]  = useState(null)
   const [adminNotes,  setAdminNotes]  = useState({})
+  const [startingChat, setStartingChat] = useState(null)
+
+  async function startChat(customerId) {
+    setStartingChat(customerId)
+    try {
+      const d = await chatApi.startAsAdmin(customerId)
+      navigate(`/admin/messages/${d.data.id}`)
+    } catch {
+      toast.error('Could not start chat')
+    } finally {
+      setStartingChat(null)
+    }
+  }
 
   useEffect(() => { fetchRefunds() }, [filter])
 
@@ -95,7 +111,11 @@ export default function AdminRefunds() {
                         </span>
                       </div>
                       <p className="font-semibold text-sm" style={{ color: '#1C0A00' }}>
-                        {r.customer?.name} — {r.customer?.email}
+                        {r.customer?.name}
+                      </p>
+                      <p className="text-xs" style={{ color: '#7A6050' }}>
+                        {r.customer?.email}
+                        {r.customer?.phone && <span> · 📱 {r.customer.phone}</span>}
                       </p>
                       <p className="text-xs mt-0.5" style={{ color: '#7A6050' }}>
                         Order: <span className="font-mono">{r.orderId?.slice(-8).toUpperCase()}</span>
@@ -107,6 +127,13 @@ export default function AdminRefunds() {
                       {r.adminNote && (
                         <p className="text-xs mt-1 italic" style={{ color: '#7A6050' }}>Note: {r.adminNote}</p>
                       )}
+                      <button
+                        onClick={() => startChat(r.customer?.id)}
+                        disabled={startingChat === r.customer?.id}
+                        className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-60"
+                        style={{ background: 'rgba(69,123,157,0.1)', color: '#457B9D' }}>
+                        <MessageCircle size={12} /> {startingChat === r.customer?.id ? 'Opening…' : 'Chat with Customer'}
+                      </button>
                     </div>
 
                     {r.status === 'pending' && (
