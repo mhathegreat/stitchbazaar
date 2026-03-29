@@ -158,8 +158,8 @@ export default function VendorRegister() {
               Reach customers across the country.
             </p>
             <div className="flex flex-col gap-3 text-left">
-              {['Free to register','10% commission only on sales','Cash payout to your bank','WhatsApp order alerts','Admin support 7 days'].map((t, i) => (
-                <div key={i} className="flex items-center gap-3">
+              {['Free to register','10% commission only on sales','Cash payout to your bank','WhatsApp order alerts','Admin support 7 days'].map((t) => (
+                <div key={t} className="flex items-center gap-3">
                   <span className="w-2 h-2 rounded-full flex-shrink-0"
                     style={{ background: Object.values(colors).slice(0, 5)[i] }} />
                   <span className="text-sm" style={{ color: '#C8B89A' }}>{t}</span>
@@ -181,7 +181,7 @@ export default function VendorRegister() {
             {/* Step indicator */}
             <div className="flex items-center gap-0 mb-8">
               {STEPS.map((s, i) => (
-                <div key={i} className="flex items-center flex-1">
+                <div key={s} className="flex items-center flex-1">
                   <div className="flex flex-col items-center">
                     <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all"
                       style={i <= step

@@ -105,6 +105,7 @@ model User {
   savedCart        SavedCart?
   conversations    Conversation[] @relation("CustomerConvos")
   sentMessages     Message[]      @relation("SentMessages")
+  notifications    Notification[]
 
   @@map("users")
 }
@@ -452,4 +453,18 @@ model BankDetail {
   vendor        Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
 
   @@map("bank_details")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  payload   Json
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("notifications")
 }

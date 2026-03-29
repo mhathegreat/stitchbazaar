@@ -86,7 +86,7 @@ export default function VendorDashboard() {
     { label: 'Total Earnings', value: formatPrice(stats.netRevenue), icon: <DollarSign size={20} />,  color: '#0F6E56', bg: 'rgba(15,110,86,0.1)'  },
     { label: 'Pending Payout', value: formatPrice(stats.pendingPayout), icon: <TrendingUp size={20} />, color: '#6A4C93', bg: 'rgba(106,76,147,0.1)' },
     ...(openDisputes > 0 ? [{ label: 'Open Disputes', value: openDisputes, icon: <AlertCircle size={20} />, color: '#D85A30', bg: 'rgba(216,90,48,0.1)' }] : []),
-  ] : []
+  ] : null
 
   return (
     <VendorLayout active="/vendor/dashboard" title="Dashboard">
@@ -118,16 +118,21 @@ export default function VendorDashboard() {
 
           {/* Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
-            {statCards.map((s, i) => (
-              <div key={i} className="rounded-xl p-5 mosaic-block" style={{ background: '#FFF8E7' }}>
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
-                  style={{ background: s.bg, color: s.color }}>
-                  {s.icon}
-                </div>
-                <p className="font-bold text-xl font-serif" style={{ color: s.color }}>{s.value}</p>
-                <p className="text-xs font-medium mt-0.5" style={{ color: '#7A6050' }}>{s.label}</p>
-              </div>
-            ))}
+            {statCards
+              ? statCards.map((s, i) => (
+                  <div key={i} className="rounded-xl p-5 mosaic-block" style={{ background: '#FFF8E7' }}>
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
+                      style={{ background: s.bg, color: s.color }}>
+                      {s.icon}
+                    </div>
+                    <p className="font-bold text-xl font-serif" style={{ color: s.color }}>{s.value}</p>
+                    <p className="text-xs font-medium mt-0.5" style={{ color: '#7A6050' }}>{s.label}</p>
+                  </div>
+                ))
+              : [1,2,3,4].map(i => (
+                  <div key={i} className="skeleton rounded-xl" style={{ height: 110 }} />
+                ))
+            }
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

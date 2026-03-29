@@ -37,7 +37,8 @@ export default function VendorProductForm() {
   const { id } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
-  const returnPath = location.state?.returnPath || '/vendor/products'
+  const isAdminEdit = location.pathname.startsWith('/admin/')
+  const returnPath = location.state?.returnPath || (isAdminEdit ? '/admin/products' : '/vendor/products')
   const isEdit = Boolean(id)
   const fileInputRef = useRef(null)
 
@@ -196,7 +197,7 @@ export default function VendorProductForm() {
         <div className="sticky top-0 z-20 px-4 py-3 flex items-center justify-between"
           style={{ background: '#1C0A00', borderBottom: '2px solid rgba(200,139,0,0.2)' }}>
           <div className="flex items-center gap-3">
-            <Link to="/vendor/products" className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+            <Link to={isAdminEdit ? '/admin/products' : '/vendor/products'} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
               style={{ color: '#C8B89A' }}>
               <ArrowLeft size={18} />
             </Link>
@@ -382,8 +383,9 @@ export default function VendorProductForm() {
               <div className="rounded-xl p-4" style={{ background: '#FFF8E7', border: '2px solid rgba(200,139,0,0.15)' }}>
                 <p className="font-serif font-bold text-sm mb-3" style={{ color: '#C88B00' }}>Status</p>
                 {[
-                  { value: 'active',   label: 'Active',   hint: 'Visible to customers' },
-                  { value: 'inactive', label: 'Inactive', hint: 'Hidden from shop' },
+                  { value: 'active',   label: 'Active',    hint: 'Visible to customers' },
+                  { value: 'inactive', label: 'Inactive',  hint: 'Hidden from shop' },
+                  ...(isAdminEdit ? [{ value: 'suspended', label: 'Suspended', hint: 'Admin moderation hold' }] : []),
                 ].map(s => (
                   <label key={s.value} className="flex items-center gap-2.5 py-2 cursor-pointer">
                     <input type="radio" name="status" value={s.value} checked={form.status === s.value}

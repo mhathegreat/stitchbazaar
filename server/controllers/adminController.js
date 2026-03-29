@@ -387,9 +387,23 @@ export async function deleteCategory(req, res, next) {
 
 export async function listAllOrders(req, res, next) {
   try {
-    const { status, page = 1, limit = 20 } = req.query
+    const { status, city, search, dateFrom, dateTo, page = 1, limit = 20 } = req.query
     const where = {}
-    if (status) where.status = status
+    if (status)   where.status = status
+    if (city)     where.city   = { contains: city, mode: 'insensitive' }
+    if (dateFrom || dateTo) {
+      where.createdAt = {}
+      if (dateFrom) where.createdAt.gte = new Date(dateFrom)
+      if (dateTo)   where.createdAt.lte = new Date(new Date(dateTo).setHours(23, 59, 59, 999))
+    }
+    if (search) {
+      where.OR = [
+        { guestName:  { contains: search, mode: 'insensitive' } },
+        { guestEmail: { contains: search, mode: 'insensitive' } },
+        { customer:   { name:  { contains: search, mode: 'insensitive' } } },
+        { customer:   { email: { contains: search, mode: 'insensitive' } } },
+      ]
+    }
 
     const [orders, total] = await Promise.all([
       prisma.order.findMany({

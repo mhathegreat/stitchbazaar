@@ -135,7 +135,19 @@ export default function VendorProducts() {
                   </tr>
                 </thead>
                 <tbody style={{ background: '#FFF8E7' }}>
-                  {filtered.length === 0 ? (
+                  {loading ? (
+                    [1,2,3,4,5].map(i => (
+                      <tr key={i} style={{ borderTop: i > 1 ? '1px solid rgba(200,139,0,0.1)' : undefined }}>
+                        <td className="px-4 py-3"><div className="skeleton rounded-lg h-9 w-full max-w-[220px]" /></td>
+                        <td className="px-4 py-3 hidden sm:table-cell"><div className="skeleton rounded h-5 w-20" /></td>
+                        <td className="px-4 py-3"><div className="skeleton rounded h-5 w-16 ml-auto" /></td>
+                        <td className="px-4 py-3 hidden md:table-cell"><div className="skeleton rounded h-5 w-10 ml-auto" /></td>
+                        <td className="px-4 py-3 hidden lg:table-cell"><div className="skeleton rounded h-5 w-10 mx-auto" /></td>
+                        <td className="px-4 py-3"><div className="skeleton rounded-full h-5 w-16 mx-auto" /></td>
+                        <td className="px-4 py-3"><div className="skeleton rounded h-7 w-20 ml-auto" /></td>
+                      </tr>
+                    ))
+                  ) : filtered.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="text-center py-12" style={{ color: '#7A6050' }}>
                         <Package size={32} className="mx-auto mb-2 opacity-40" />

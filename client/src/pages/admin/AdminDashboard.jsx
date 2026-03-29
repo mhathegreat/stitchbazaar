@@ -87,6 +87,21 @@ export default function AdminDashboard() {
     { label: 'Platform Revenue',value: '—', icon: <DollarSign size={20}/>,   color: '#6A4C93', bg: 'rgba(106,76,147,0.1)' },
   ]
 
+  if (loading) return (
+    <AdminLayout active="/admin" title="Dashboard">
+      <div className="flex flex-col gap-4 max-w-5xl">
+        <div className="skeleton h-8 w-48 rounded" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1,2,3,4].map(i => <div key={i} className="skeleton rounded-xl" style={{ height: 110 }} />)}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="skeleton rounded-xl" style={{ height: 200 }} />
+          <div className="skeleton rounded-xl" style={{ height: 200 }} />
+        </div>
+      </div>
+    </AdminLayout>
+  )
+
   return (
     <AdminLayout active="/admin" title="Dashboard">
       <div className="relative">

@@ -2,9 +2,9 @@
  * Admin — All Orders — /admin/orders
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { Eye, ShoppingBag, RefreshCw } from 'lucide-react'
+import { Eye, ShoppingBag, RefreshCw, Search, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import AdminLayout from './AdminLayout.jsx'
 import { formatPrice } from '../../styles/theme.js'
@@ -22,20 +22,41 @@ const STATUS_COLORS = {
   disputed:  { color: '#D85A30', bg: 'rgba(216,90,48,0.1)'  },
 }
 
+const inputCls   = "px-3 py-2 rounded-xl text-sm outline-none"
+const inputStyle = { background: '#FFFCF5', border: '1.5px solid rgba(200,139,0,0.25)', color: '#1C0A00' }
+
 export default function AdminOrders() {
   const [orders,   setOrders]   = useState([])
   const [loading,  setLoading]  = useState(true)
   const [filter,   setFilter]   = useState('all')
   const [meta,     setMeta]     = useState({})
-  const [updating, setUpdating] = useState(null)   // orderId being updated
+  const [updating, setUpdating] = useState(null)
 
-  useEffect(() => {
-    const params = filter !== 'all' ? { status: filter } : {}
+  const [search,   setSearch]   = useState('')
+  const [city,     setCity]     = useState('')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo,   setDateTo]   = useState('')
+
+  const fetchOrders = useCallback(() => {
+    setLoading(true)
+    const params = {}
+    if (filter !== 'all') params.status   = filter
+    if (search)           params.search   = search
+    if (city)             params.city     = city
+    if (dateFrom)         params.dateFrom = dateFrom
+    if (dateTo)           params.dateTo   = dateTo
     adminApi.orders(params)
       .then(d => { setOrders(d.data || []); setMeta(d.meta || {}) })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [filter])
+  }, [filter, search, city, dateFrom, dateTo])
+
+  useEffect(() => { fetchOrders() }, [fetchOrders])
+
+  function clearFilters() {
+    setSearch(''); setCity(''); setDateFrom(''); setDateTo('')
+  }
+  const hasFilters = search || city || dateFrom || dateTo
 
   async function handleStatusChange(orderId, newStatus) {
     setUpdating(orderId)
@@ -71,6 +92,38 @@ export default function AdminOrders() {
         </div>
       </div>
 
+      {/* Search + filters */}
+      <div className="flex flex-wrap gap-2 mb-5">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#C88B00' }} />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search customer name or email…"
+            className={`${inputCls} w-full pl-8`}
+            style={inputStyle}
+          />
+        </div>
+        <input
+          value={city}
+          onChange={e => setCity(e.target.value)}
+          placeholder="City"
+          className={inputCls}
+          style={{ ...inputStyle, width: 130 }}
+        />
+        <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
+          className={inputCls} style={inputStyle} title="From date" />
+        <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
+          className={inputCls} style={inputStyle} title="To date" />
+        {hasFilters && (
+          <button onClick={clearFilters}
+            className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold"
+            style={{ background: 'rgba(216,90,48,0.1)', color: '#D85A30' }}>
+            <X size={12} /> Clear
+          </button>
+        )}
+      </div>
+
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
         {[
@@ -101,7 +154,19 @@ export default function AdminOrders() {
               </tr>
             </thead>
             <tbody style={{ background: '#FFF8E7' }}>
-              {filtered.length === 0 ? (
+              {loading ? (
+                [1,2,3,4,5].map(i => (
+                  <tr key={i} style={{ borderTop: i > 1 ? '1px solid rgba(200,139,0,0.1)' : undefined }}>
+                    <td className="px-4 py-3"><div className="skeleton rounded h-5 w-24" /></td>
+                    <td className="px-4 py-3 hidden md:table-cell"><div className="skeleton rounded h-5 w-28" /></td>
+                    <td className="px-4 py-3 hidden lg:table-cell"><div className="skeleton rounded h-5 w-16" /></td>
+                    <td className="px-4 py-3 hidden sm:table-cell"><div className="skeleton rounded h-5 w-20" /></td>
+                    <td className="px-4 py-3"><div className="skeleton rounded h-5 w-16 ml-auto" /></td>
+                    <td className="px-4 py-3"><div className="skeleton rounded-full h-5 w-20 mx-auto" /></td>
+                    <td className="px-4 py-3"><div className="skeleton rounded h-7 w-24 ml-auto" /></td>
+                  </tr>
+                ))
+              ) : filtered.length === 0 ? (
                 <tr><td colSpan={7} className="text-center py-10" style={{ color: '#7A6050' }}>
                   <ShoppingBag size={28} className="mx-auto mb-2 opacity-30" /> No orders found
                 </td></tr>
@@ -141,7 +206,7 @@ export default function AdminOrders() {
                         {updating === o.id && (
                           <RefreshCw size={12} className="animate-spin" style={{ color: '#C88B00' }} />
                         )}
-                        <Link to={`/customer/orders/${o.id}`}
+                        <Link to={`/admin/orders/${o.id}`}
                           className="p-1.5 rounded-lg hover:bg-amber-100 inline-block shrink-0" style={{ color: '#457B9D' }}
                           title="View order">
                           <Eye size={14} />

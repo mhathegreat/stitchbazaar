@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { ShoppingCart, Menu, X, User, LogOut, ShoppingBag, Heart, LayoutDashboard, Store, Shield, MessageCircle } from 'lucide-react'
+import { ShoppingCart, Menu, X, User, LogOut, ShoppingBag, Heart, LayoutDashboard, Store, Shield, MessageCircle, Bell } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext.jsx'
 import NotificationBell from './NotificationBell.jsx'
 import SearchBar from './SearchBar.jsx'
@@ -59,10 +59,11 @@ export default function Navbar({ cartCount = 0 }) {
         { to: '/vendor/messages',  label: 'Messages',    icon: <MessageCircle size={14} />   },
       ]
     : [
-        { to: '/customer/profile', label: 'My Profile',  icon: <User size={14} />            },
-        { to: '/customer/orders',  label: 'My Orders',   icon: <ShoppingBag size={14} />     },
-        { to: '/customer/wishlist',label: 'Wishlist',    icon: <Heart size={14} />           },
-        { to: '/messages',         label: 'Messages',    icon: <MessageCircle size={14} />   },
+        { to: '/customer/profile', label: 'My Profile',     icon: <User size={14} />            },
+        { to: '/customer/orders',  label: 'My Orders',      icon: <ShoppingBag size={14} />     },
+        { to: '/customer/wishlist',label: 'Wishlist',        icon: <Heart size={14} />           },
+        { to: '/messages',         label: 'Messages',        icon: <MessageCircle size={14} />   },
+        { to: '/notifications',    label: 'Notifications',   icon: <Bell size={14} />            },
       ]
 
   return (

@@ -50,8 +50,9 @@ import OrderDetail     from './pages/customer/OrderDetail.jsx'
 import Dispute         from './pages/customer/Dispute.jsx'
 
 // ── Messaging ─────────────────────────────────────────────────────
-import Messages from './pages/Messages.jsx'
-import ChatRoom from './pages/ChatRoom.jsx'
+import Messages       from './pages/Messages.jsx'
+import ChatRoom       from './pages/ChatRoom.jsx'
+import Notifications  from './pages/Notifications.jsx'
 
 // ── Admin pages ───────────────────────────────────────────────────
 import AdminDashboard  from './pages/admin/AdminDashboard.jsx'
@@ -65,6 +66,7 @@ import AdminCoupons    from './pages/admin/AdminCoupons.jsx'
 import AdminShipping   from './pages/admin/AdminShipping.jsx'
 import AdminRefunds    from './pages/admin/AdminRefunds.jsx'
 import AdminAuditLog   from './pages/admin/AdminAuditLog.jsx'
+import AdminOrderDetail from './pages/admin/AdminOrderDetail.jsx'
 
 // ── 404 ───────────────────────────────────────────────────────────
 function NotFound() {
@@ -130,11 +132,8 @@ function AppShell() {
         <Route path="/vendor/messages"       element={<ProtectedRoute role="vendor"><Messages /></ProtectedRoute>} />
         <Route path="/vendor/messages/:id"   element={<ProtectedRoute role="vendor"><ChatRoom /></ProtectedRoute>} />
 
-        {/* ── Messaging ── */}
-        <Route path="/messages"              element={<ProtectedRoute><Messages /></ProtectedRoute>} />
-        <Route path="/messages/:id"          element={<ProtectedRoute><ChatRoom /></ProtectedRoute>} />
-        <Route path="/vendor/messages"       element={<ProtectedRoute role="vendor"><Messages /></ProtectedRoute>} />
-        <Route path="/vendor/messages/:id"   element={<ProtectedRoute role="vendor"><ChatRoom /></ProtectedRoute>} />
+        {/* ── Notifications ── */}
+        <Route path="/notifications"         element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
 
         {/* ── Admin (must be logged in as admin) ── */}
         <Route path="/admin"                     element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
@@ -142,6 +141,7 @@ function AppShell() {
         <Route path="/admin/products"            element={<ProtectedRoute role="admin"><AdminProducts /></ProtectedRoute>} />
         <Route path="/admin/products/:id/edit"   element={<ProtectedRoute role="admin"><VendorProductForm /></ProtectedRoute>} />
         <Route path="/admin/orders"              element={<ProtectedRoute role="admin"><AdminOrders /></ProtectedRoute>} />
+        <Route path="/admin/orders/:id"          element={<ProtectedRoute role="admin"><AdminOrderDetail /></ProtectedRoute>} />
         <Route path="/admin/payouts"             element={<ProtectedRoute role="admin"><AdminPayouts /></ProtectedRoute>} />
         <Route path="/admin/disputes"            element={<ProtectedRoute role="admin"><AdminDisputes /></ProtectedRoute>} />
         <Route path="/admin/categories"          element={<ProtectedRoute role="admin"><AdminCategories /></ProtectedRoute>} />
