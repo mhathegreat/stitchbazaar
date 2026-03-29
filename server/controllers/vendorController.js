@@ -6,6 +6,7 @@
 import { z } from 'zod'
 import prisma from '../utils/prisma.js'
 import { logger } from '../utils/logger.js'
+import { pushToRoleFiltered } from '../utils/sse.js'
 
 // ── Schemas ──────────────────────────────────────────────────────
 
@@ -286,6 +287,12 @@ export async function requestPayout(req, res, next) {
     })
 
     logger.info(`Payout requested: vendor ${vendor.id}, amount ${available}`)
+
+    // Notify admins of the payout request (respecting their mute preference)
+    pushToRoleFiltered('admin', {
+      type:    'payout_requested',
+      payload: { payoutId: payout.id, amount: available, shopName: vendor.shopName },
+    }, 'mute_payout_requested')
 
     res.status(201).json({
       success: true,

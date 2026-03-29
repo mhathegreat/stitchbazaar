@@ -8,7 +8,7 @@ import prisma from '../utils/prisma.js'
 import { logger } from '../utils/logger.js'
 import { buildVendorNotifyLink } from '../utils/whatsapp.js'
 import { sendOrderConfirmation, sendOrderStatusUpdate, sendLowStockAlert } from '../utils/email.js'
-import { pushToRole, pushToUser } from '../utils/sse.js'
+import { pushToRoleFiltered, pushToUser } from '../utils/sse.js'
 
 // ── Schemas ──────────────────────────────────────────────────────
 
@@ -185,8 +185,20 @@ export async function createOrder(req, res, next) {
         customer: guestName || 'Customer',
       },
     }
-    pushToRole('admin', event)
-    for (const { userId } of vendorUserIds) pushToUser(userId, event)
+    // Notify affected vendors (respecting their new_order preference)
+    for (const { userId } of vendorUserIds) {
+      const prefs = await prisma.user.findUnique({ where: { id: userId }, select: { notificationPrefs: true } })
+      const muteNewOrder = prefs?.notificationPrefs?.mute_new_order === true
+      if (!muteNewOrder) pushToUser(userId, event)
+    }
+
+    // Notify the customer that their order was placed
+    if (req.user?.id) {
+      pushToUser(req.user.id, {
+        type:    'order_placed',
+        payload: { orderId: order.id, total: totalAmount, items: order.items.length },
+      })
+    }
 
     // Send confirmation email (fire-and-forget)
     const emailTo   = guestEmail   || (req.user ? (await prisma.user.findUnique({ where: { id: req.user.id }, select: { email: true, name: true } }))?.email : null)
@@ -331,6 +343,14 @@ export async function updateOrderStatus(req, res, next) {
         // Push real-time update to customer
         if (order.customerId) {
           pushToUser(order.customerId, { type: 'order_status', payload: { orderId: order.id, status } })
+
+          // When delivered, prompt the customer to leave a review
+          if (status === 'delivered') {
+            pushToUser(order.customerId, {
+              type:    'review_reminder',
+              payload: { orderId: order.id },
+            })
+          }
         }
       }
 
@@ -392,6 +412,12 @@ export async function raiseDispute(req, res, next) {
       where: { id: order.id },
       data:  { status: 'disputed' },
     })
+
+    // Notify admins of the new dispute (respecting their mute preference)
+    pushToRoleFiltered('admin', {
+      type:    'dispute_opened',
+      payload: { orderId: order.id, disputeId: dispute.id, reason: parsed.data.reason.slice(0, 80) },
+    }, 'mute_dispute_opened')
 
     res.status(201).json({ success: true, message: 'Dispute raised', data: dispute })
   } catch (err) {

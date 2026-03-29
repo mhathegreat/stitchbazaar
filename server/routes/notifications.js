@@ -6,14 +6,29 @@
  */
 
 import { Router } from 'express'
+import jwt from 'jsonwebtoken'
 import { requireAuth } from '../middleware/auth.js'
 import { addClient, removeClient } from '../utils/sse.js'
 import prisma from '../utils/prisma.js'
 
 const router = Router()
 
+/** Auth middleware that also accepts ?token= query param (needed for EventSource). */
+function requireAuthSSE(req, res, next) {
+  // Prefer Authorization header; fall back to ?token= query param (SSE-only)
+  const header = req.headers.authorization
+  const raw = header?.startsWith('Bearer ') ? header.split(' ')[1] : (req.query.token || null)
+  if (!raw) return res.status(401).json({ success: false, message: 'Authentication required' })
+  try {
+    req.user = jwt.verify(raw, process.env.JWT_SECRET)
+    next()
+  } catch {
+    res.status(401).json({ success: false, message: 'Invalid token' })
+  }
+}
+
 /* ── SSE stream ───────────────────────────────────────────────────── */
-router.get('/stream', requireAuth, (req, res) => {
+router.get('/stream', requireAuthSSE, (req, res) => {
   res.setHeader('Content-Type',  'text/event-stream')
   res.setHeader('Cache-Control', 'no-cache')
   res.setHeader('Connection',    'keep-alive')
@@ -59,6 +74,37 @@ router.patch('/read', requireAuth, async (req, res, next) => {
       data:  { read: true },
     })
     res.json({ success: true })
+  } catch (err) {
+    next(err)
+  }
+})
+
+/* ── Get notification preferences ──────────────────────────────── */
+router.get('/prefs', requireAuth, async (req, res, next) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where:  { id: req.user.id },
+      select: { notificationPrefs: true },
+    })
+    res.json({ success: true, data: user?.notificationPrefs || {} })
+  } catch (err) {
+    next(err)
+  }
+})
+
+/* ── Update notification preferences ───────────────────────────── */
+router.patch('/prefs', requireAuth, async (req, res, next) => {
+  try {
+    const current = await prisma.user.findUnique({
+      where:  { id: req.user.id },
+      select: { notificationPrefs: true },
+    })
+    const merged = { ...(current?.notificationPrefs || {}), ...req.body }
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data:  { notificationPrefs: merged },
+    })
+    res.json({ success: true, data: merged })
   } catch (err) {
     next(err)
   }

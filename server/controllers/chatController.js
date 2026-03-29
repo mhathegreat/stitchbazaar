@@ -194,14 +194,17 @@ export async function sendMessage(req, res, next) {
       ? conversation.customerId
       : conversation.vendor.userId
 
-    pushToUser(recipientId, {
-      type: 'new_message',
-      payload: {
-        conversationId: conversation.id,
-        senderName:     req.user.name || 'Someone',
-        preview:        preview.slice(0, 60),
-      },
-    })
+    const recipientPrefs = await prisma.user.findUnique({ where: { id: recipientId }, select: { notificationPrefs: true } })
+    if (!recipientPrefs?.notificationPrefs?.mute_new_message) {
+      pushToUser(recipientId, {
+        type: 'new_message',
+        payload: {
+          conversationId: conversation.id,
+          senderName:     req.user.name || 'Someone',
+          preview:        preview.slice(0, 60),
+        },
+      })
+    }
 
     res.status(201).json({ success: true, data: message })
   } catch (err) { next(err) }

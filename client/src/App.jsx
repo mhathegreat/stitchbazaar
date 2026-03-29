@@ -35,6 +35,7 @@ import VendorProductForm  from './pages/vendor/VendorProductForm.jsx'
 import VendorOrders       from './pages/vendor/VendorOrders.jsx'
 import VendorEarnings     from './pages/vendor/VendorEarnings.jsx'
 import VendorSettings     from './pages/vendor/VendorSettings.jsx'
+import VendorRefunds      from './pages/vendor/VendorRefunds.jsx'
 import VendorImport      from './pages/vendor/VendorImport.jsx'
 
 // ── Cart / Checkout ───────────────────────────────────────────────
@@ -67,6 +68,7 @@ import AdminShipping   from './pages/admin/AdminShipping.jsx'
 import AdminRefunds    from './pages/admin/AdminRefunds.jsx'
 import AdminAuditLog   from './pages/admin/AdminAuditLog.jsx'
 import AdminOrderDetail from './pages/admin/AdminOrderDetail.jsx'
+import AdminSettings    from './pages/admin/AdminSettings.jsx'
 
 // ── 404 ───────────────────────────────────────────────────────────
 function NotFound() {
@@ -112,6 +114,7 @@ function AppShell() {
         <Route path="/vendor/orders"             element={<ProtectedRoute role="vendor"><VendorOrders /></ProtectedRoute>} />
         <Route path="/vendor/earnings"           element={<ProtectedRoute role="vendor"><VendorEarnings /></ProtectedRoute>} />
         <Route path="/vendor/settings"           element={<ProtectedRoute role="vendor"><VendorSettings /></ProtectedRoute>} />
+        <Route path="/vendor/refunds"            element={<ProtectedRoute role="vendor"><VendorRefunds /></ProtectedRoute>} />
         <Route path="/vendor/import"             element={<ProtectedRoute role="vendor"><VendorImport /></ProtectedRoute>} />
 
         {/* ── Cart / Checkout ── */}
@@ -149,6 +152,7 @@ function AppShell() {
         <Route path="/admin/shipping"            element={<ProtectedRoute role="admin"><AdminShipping /></ProtectedRoute>} />
         <Route path="/admin/refunds"             element={<ProtectedRoute role="admin"><AdminRefunds /></ProtectedRoute>} />
         <Route path="/admin/audit"               element={<ProtectedRoute role="admin"><AdminAuditLog /></ProtectedRoute>} />
+        <Route path="/admin/settings"            element={<ProtectedRoute role="admin"><AdminSettings /></ProtectedRoute>} />
 
         {/* ── 404 ── */}
         <Route path="*"                          element={<NotFound />} />

@@ -89,9 +89,10 @@ model User {
   phone         String?
   address       String?
   city          String?
-  preferredLang Lang      @default(en)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  preferredLang     Lang      @default(en)
+  notificationPrefs Json      @default("{}")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   vendor           Vendor?
   orders           Order[]

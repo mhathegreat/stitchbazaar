@@ -236,6 +236,21 @@ export async function processPayout(req, res, next) {
       }).catch(e => logger.warn(`Payout email failed: ${e.message}`))
     }
 
+    // Real-time notification to vendor (respecting their mute preference)
+    const vendorUser = await prisma.vendor.findUnique({
+      where:  { id: payout.vendorId },
+      select: { userId: true },
+    })
+    if (vendorUser) {
+      const prefs = await prisma.user.findUnique({ where: { id: vendorUser.userId }, select: { notificationPrefs: true } })
+      if (!prefs?.notificationPrefs?.mute_payout_status) {
+        pushToUser(vendorUser.userId, {
+          type:    'payout_status',
+          payload: { payoutId: payout.id, amount: payout.amount, status, adminNote },
+        })
+      }
+    }
+
     res.json({ success: true, message: `Payout marked as ${status}`, data: payout })
   } catch (err) {
     next(err)
@@ -290,13 +305,18 @@ export async function resolveDispute(req, res, next) {
         data:  { status: 'delivered' },
       })
 
-      // Notify customer
+      // Notify customer by email + real-time
       if (dispute.customer?.email) {
         sendDisputeResolution({
           to: dispute.customer.email, name: dispute.customer.name,
           orderId: dispute.orderId, status, resolution,
         }).catch(e => logger.warn(`Dispute resolution email failed: ${e.message}`))
       }
+
+      pushToUser(dispute.customerId, {
+        type:    'dispute_resolved',
+        payload: { disputeId: dispute.id, orderId: dispute.orderId, status, resolution },
+      })
     }
 
     audit(req, `dispute.${status}`, 'Dispute', dispute.id, { orderId: dispute.orderId, resolution })

@@ -3,13 +3,14 @@
  */
 
 import { useState, useEffect, useRef } from 'react'
-import { Save, Camera, Palette } from 'lucide-react'
+import { Save, Camera, Palette, Bell } from 'lucide-react'
 import VendorLayout from './VendorLayout.jsx'
 import { vendorsApi } from '../../api/vendors.js'
 import { authApi } from '../../api/auth.js'
 import api from '../../api/client.js'
 import { useAuth } from '../../context/AuthContext.jsx'
 import toast from 'react-hot-toast'
+
 
 const COLOR_OPTIONS = [
   '#C88B00', '#D85A30', '#0F6E56', '#6A4C93',
@@ -68,6 +69,9 @@ export default function VendorSettings() {
     phone: user?.phone || '',
   })
 
+  const [notifPrefs, setNotifPrefs] = useState({ mute_new_order: false })
+  const [savingPrefs, setSavingPrefs] = useState(false)
+
   useEffect(() => {
     vendorsApi.dashboard()
       .then(d => {
@@ -87,6 +91,10 @@ export default function VendorSettings() {
           branchCode:    v.branchCode        || '',
         })
       })
+      .catch(() => {})
+
+    api.get('/notifications/prefs')
+      .then(r => { if (r.data.success) setNotifPrefs(p => ({ ...p, ...r.data.data })) })
       .catch(() => {})
   }, [])
 
@@ -111,6 +119,17 @@ export default function VendorSettings() {
       setUploading(false)
       e.target.value = ''
     }
+  }
+
+  async function handleSavePrefs() {
+    setSavingPrefs(true)
+    try {
+      const r = await api.patch('/notifications/prefs', notifPrefs)
+      if (!r.data.success) throw new Error()
+      toast.success('Notification preferences saved!')
+    } catch {
+      toast.error('Failed to save preferences')
+    } finally { setSavingPrefs(false) }
   }
 
   async function handleSave() {
@@ -148,9 +167,10 @@ export default function VendorSettings() {
             {/* Tabs */}
             <div className="flex gap-2 mb-6 border-b" style={{ borderColor: 'rgba(200,139,0,0.2)' }}>
               {[
-                { id: 'shop',    label: 'Shop Info'     },
-                { id: 'bank',    label: 'Bank Details'  },
-                { id: 'profile', label: 'My Account'    },
+                { id: 'shop',          label: 'Shop Info'      },
+                { id: 'bank',          label: 'Bank Details'   },
+                { id: 'profile',       label: 'My Account'     },
+                { id: 'notifications', label: 'Notifications'  },
               ].map(t => (
                 <button key={t.id} onClick={() => setTab(t.id)}
                   className="px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors -mb-px"
@@ -308,13 +328,78 @@ export default function VendorSettings() {
               </div>
             )}
 
-            {/* Save button */}
-            <button onClick={handleSave} disabled={saving}
-              className="mt-6 flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all hover:-translate-y-0.5 disabled:opacity-60"
-              style={{ background: '#C88B00', color: '#1C0A00' }}>
-              <Save size={15} />
-              {saving ? 'Saving…' : 'Save Changes'}
-            </button>
+            {/* Notifications Tab */}
+            {tab === 'notifications' && (
+              <div className="flex flex-col gap-5">
+                <div className="rounded-xl p-4" style={{ background: 'rgba(200,139,0,0.06)', border: '1px solid rgba(200,139,0,0.2)' }}>
+                  <p className="text-xs" style={{ color: '#A07000' }}>
+                    Control which notifications you receive. Turned-off notifications won't appear in your bell or be saved.
+                  </p>
+                </div>
+
+                {[
+                  {
+                    key:    'mute_new_order',
+                    label:  'New Orders',
+                    desc:   'Get notified when a customer places a new order containing your products.',
+                    invert: true,
+                  },
+                  {
+                    key:    'mute_new_message',
+                    label:  'Customer Messages',
+                    desc:   'Get notified when a customer sends you a message.',
+                    invert: true,
+                  },
+                  {
+                    key:    'mute_payout_status',
+                    label:  'Payout Updates',
+                    desc:   'Get notified when admin processes your payout request.',
+                    invert: true,
+                  },
+                  {
+                    key:    'mute_refund_requested',
+                    label:  'Refund Requests',
+                    desc:   'Get notified when a customer requests a refund on one of your orders.',
+                    invert: true,
+                  },
+                ].map(({ key, label, desc, invert }) => {
+                  const enabled = invert ? !notifPrefs[key] : !!notifPrefs[key]
+                  return (
+                    <div key={key} className="flex items-center justify-between gap-4 rounded-xl px-4 py-3"
+                      style={{ background: '#FFFCF5', border: '2px solid rgba(200,139,0,0.15)' }}>
+                      <div>
+                        <p className="text-sm font-semibold" style={{ color: '#1C0A00' }}>{label}</p>
+                        <p className="text-xs mt-0.5" style={{ color: '#7A6050' }}>{desc}</p>
+                      </div>
+                      <button type="button"
+                        onClick={() => setNotifPrefs(p => ({ ...p, [key]: invert ? enabled : !p[key] }))}
+                        className="relative shrink-0 w-11 h-6 rounded-full transition-colors duration-200"
+                        style={{ background: enabled ? '#C88B00' : 'rgba(200,139,0,0.2)' }}>
+                        <span className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200"
+                          style={{ transform: enabled ? 'translateX(20px)' : 'translateX(0)' }} />
+                      </button>
+                    </div>
+                  )
+                })}
+
+                <button onClick={handleSavePrefs} disabled={savingPrefs}
+                  className="mt-2 flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all hover:-translate-y-0.5 disabled:opacity-60"
+                  style={{ background: '#C88B00', color: '#1C0A00' }}>
+                  <Bell size={15} />
+                  {savingPrefs ? 'Saving…' : 'Save Preferences'}
+                </button>
+              </div>
+            )}
+
+            {/* Save button (shop / bank / profile tabs only) */}
+            {tab !== 'notifications' && (
+              <button onClick={handleSave} disabled={saving}
+                className="mt-6 flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all hover:-translate-y-0.5 disabled:opacity-60"
+                style={{ background: '#C88B00', color: '#1C0A00' }}>
+                <Save size={15} />
+                {saving ? 'Saving…' : 'Save Changes'}
+              </button>
+            )}
       </div>
     </VendorLayout>
   )

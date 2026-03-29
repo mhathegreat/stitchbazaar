@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
   LayoutDashboard, Package, ShoppingBag,
-  DollarSign, Store, MessageCircle, LogOut, Upload, Menu, X,
+  DollarSign, Store, MessageCircle, LogOut, Upload, Menu, X, RotateCcw,
 } from 'lucide-react'
 import PageWrapper from '../../components/layout/PageWrapper.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
@@ -17,6 +17,7 @@ const NAV = [
   { to: '/vendor/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={16} />, countKey: 'attention'     },
   { to: '/vendor/products',  label: 'Products',  icon: <Package size={16} />                                    },
   { to: '/vendor/orders',    label: 'Orders',    icon: <ShoppingBag size={16} />,    countKey: 'pendingOrders'  },
+  { to: '/vendor/refunds',   label: 'Refunds',   icon: <RotateCcw size={16} />,      countKey: 'pendingRefunds' },
   { to: '/vendor/earnings',  label: 'Earnings',  icon: <DollarSign size={16} />                                 },
   { to: '/vendor/import',    label: 'Import',    icon: <Upload size={16} />                                     },
   { to: '/vendor/messages',  label: 'Messages',  icon: <MessageCircle size={16} />                              },
@@ -76,6 +77,7 @@ export default function VendorLayout({ children, active, title }) {
           const { pendingOrders, pendingRefunds, openDisputes } = d.data
           setCounts({
             pendingOrders,
+            pendingRefunds,
             attention: (pendingRefunds || 0) + (openDisputes || 0),
           })
         }

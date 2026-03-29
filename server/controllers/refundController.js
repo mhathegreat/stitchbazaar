@@ -11,6 +11,7 @@ import prisma from '../utils/prisma.js'
 import { audit } from '../utils/audit.js'
 import { logger } from '../utils/logger.js'
 import { sendRefundDecision } from '../utils/email.js'
+import { pushToRoleFiltered, pushToUser } from '../utils/sse.js'
 
 const requestSchema = z.object({
   orderId: z.string().min(1),
@@ -52,6 +53,30 @@ export async function requestRefund(req, res, next) {
         amount:     parsed.data.amount,
       },
     })
+
+    // Notify admins of the new refund request (respecting their mute preference)
+    pushToRoleFiltered('admin', {
+      type:    'refund_requested',
+      payload: { refundId: refund.id, orderId: parsed.data.orderId, amount: parsed.data.amount },
+    }, 'mute_refund_requested')
+
+    // Notify affected vendor(s)
+    const vendorItems = await prisma.orderItem.findMany({
+      where:  { orderId: parsed.data.orderId },
+      select: { vendor: { select: { userId: true } } },
+    })
+    const notifiedVendors = new Set()
+    for (const { vendor } of vendorItems) {
+      if (notifiedVendors.has(vendor.userId)) continue
+      notifiedVendors.add(vendor.userId)
+      const prefs = await prisma.user.findUnique({ where: { id: vendor.userId }, select: { notificationPrefs: true } })
+      if (!prefs?.notificationPrefs?.mute_refund_requested) {
+        pushToUser(vendor.userId, {
+          type:    'refund_requested',
+          payload: { refundId: refund.id, orderId: parsed.data.orderId, amount: parsed.data.amount },
+        })
+      }
+    }
 
     res.status(201).json({ success: true, data: refund })
   } catch (err) {
@@ -125,6 +150,12 @@ export async function processRefund(req, res, next) {
       adminNote: refund.adminNote || '',
       amount:    refund.amount,
     }).catch(err => logger.error('sendRefundDecision failed:', err))
+
+    // Real-time notification to customer
+    pushToUser(refund.customerId, {
+      type:    'refund_status',
+      payload: { refundId: refund.id, orderId: refund.orderId, status, amount: refund.amount },
+    })
 
     res.json({ success: true, data: refund })
   } catch (err) {
