@@ -158,7 +158,7 @@ export default function VendorRegister() {
               Reach customers across the country.
             </p>
             <div className="flex flex-col gap-3 text-left">
-              {['Free to register','10% commission only on sales','Cash payout to your bank','WhatsApp order alerts','Admin support 7 days'].map((t) => (
+              {['Free to register','10% commission only on sales','Cash payout to your bank','WhatsApp order alerts','Admin support 7 days'].map((t, i) => (
                 <div key={t} className="flex items-center gap-3">
                   <span className="w-2 h-2 rounded-full flex-shrink-0"
                     style={{ background: Object.values(colors).slice(0, 5)[i] }} />
