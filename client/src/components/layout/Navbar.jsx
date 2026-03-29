@@ -7,6 +7,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { ShoppingCart, Menu, X, User, LogOut, ShoppingBag, Heart, LayoutDashboard, Store, Shield, MessageCircle, Bell } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext.jsx'
+import { useCart } from '../../context/CartContext.jsx'
 import NotificationBell from './NotificationBell.jsx'
 import SearchBar from './SearchBar.jsx'
 
@@ -16,8 +17,9 @@ const NAV_LINKS = [
   { to: '/categories', label: 'Categories' },
 ]
 
-export default function Navbar({ cartCount = 0 }) {
+export default function Navbar() {
   const { user, logout } = useAuth()
+  const { count: cartCount } = useCart()
   const navigate = useNavigate()
   const [scrolled,    setScrolled]    = useState(false)
   const [mobileOpen,  setMobileOpen]  = useState(false)
@@ -109,13 +111,14 @@ export default function Navbar({ cartCount = 0 }) {
 
           {/* Cart */}
           <Link to="/cart"
-            className="relative p-2 rounded-lg transition-colors hover:bg-white/10"
+            className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all hover:bg-white/10"
             style={{ color: '#FFFCF5' }}
             aria-label={`Cart — ${cartCount} items`}
           >
-            <ShoppingCart size={20} />
+            <ShoppingCart size={18} />
+            <span className="hidden sm:inline text-sm font-medium">Cart</span>
             {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold px-1"
+              <span className="flex items-center justify-center min-w-[20px] h-5 px-1 rounded-full text-[10px] font-bold leading-none"
                 style={{ background: '#C88B00', color: '#1C0A00' }}>
                 {cartCount > 99 ? '99+' : cartCount}
               </span>

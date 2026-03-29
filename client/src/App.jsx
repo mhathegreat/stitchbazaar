@@ -3,7 +3,8 @@
  * Sets up router, context providers, and all page routes.
  */
 
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
 import { Toaster } from 'react-hot-toast'
 
 import { AuthProvider } from './context/AuthContext.jsx'
@@ -86,9 +87,16 @@ function NotFound() {
   )
 }
 
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => { window.scrollTo(0, 0) }, [pathname])
+  return null
+}
+
 function AppShell() {
   return (
     <>
+      <ScrollToTop />
       <Navbar />
       <Routes>
         {/* ── Public ── */}
