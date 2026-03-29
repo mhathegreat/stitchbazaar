@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { Star, ShoppingCart, Heart, Share2, Store, Shield, Truck, MessageCircle, ChevronLeft, ChevronRight, Send, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -18,6 +18,7 @@ import { useAuth }              from '../context/AuthContext.jsx'
 import { productsApi }          from '../api/products.js'
 import { reviewsApi }           from '../api/reviews.js'
 import { wishlistApi }          from '../api/wishlist.js'
+import { chatApi }              from '../api/chat.js'
 import api                      from '../api/client.js'
 import { useRecentlyViewed }    from '../hooks/useRecentlyViewed.js'
 import { cardAccent, formatPrice } from '../styles/theme.js'
@@ -72,8 +73,10 @@ export default function ProductDetail() {
   const { id }                    = useParams()
   const { addItem }               = useCart()
   const { user }                  = useAuth()
+  const navigate                  = useNavigate()
   const { items: recentItems,
           addProduct: trackView } = useRecentlyViewed()
+  const [msgLoading, setMsgLoading] = useState(false)
 
   const [product,         setProduct]         = useState(null)
   const [related,         setRelated]          = useState([])
@@ -145,6 +148,20 @@ export default function ProductDetail() {
         .catch(() => {})
     }
   }, [id, user])
+
+  async function handleMessageSeller() {
+    if (!user) { navigate('/login'); return }
+    if (user.role === 'vendor') { toast.error('Vendors cannot message other vendors'); return }
+    setMsgLoading(true)
+    try {
+      const d = await chatApi.start(product.vendor.id)
+      navigate(`/messages/${d.data.id}`)
+    } catch {
+      toast.error('Could not start conversation')
+    } finally {
+      setMsgLoading(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -464,19 +481,27 @@ export default function ProductDetail() {
 
             {/* Vendor card */}
             {product.vendor && (
-              <Link to={`/vendors/${product.vendor.id}`}
-                className="flex items-center gap-3 p-3 rounded-xl mt-1 transition-all hover:-translate-y-0.5"
-                style={{ background: '#FFF8E7', border: '2px solid rgba(200,139,0,0.2)' }}>
-                <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm"
-                  style={{ background: accent, color: '#FFFCF5' }}>
-                  {product.vendor.shopName?.[0] || 'V'}
-                </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-sm" style={{ color: '#1C0A00' }}>{product.vendor.shopName}</p>
-                  <p className="text-xs" style={{ color: '#7A6050' }}>View shop →</p>
-                </div>
-                <Store size={16} style={{ color: '#C88B00' }} />
-              </Link>
+              <div className="flex flex-col gap-2 mt-1">
+                <Link to={`/vendors/${product.vendor.id}`}
+                  className="flex items-center gap-3 p-3 rounded-xl transition-all hover:-translate-y-0.5"
+                  style={{ background: '#FFF8E7', border: '2px solid rgba(200,139,0,0.2)' }}>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm"
+                    style={{ background: accent, color: '#FFFCF5' }}>
+                    {product.vendor.shopName?.[0] || 'V'}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-sm" style={{ color: '#1C0A00' }}>{product.vendor.shopName}</p>
+                    <p className="text-xs" style={{ color: '#7A6050' }}>View shop →</p>
+                  </div>
+                  <Store size={16} style={{ color: '#C88B00' }} />
+                </Link>
+                <button onClick={handleMessageSeller} disabled={msgLoading}
+                  className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl font-semibold text-sm transition-all hover:-translate-y-0.5 disabled:opacity-60"
+                  style={{ background: '#1C0A00', color: '#FFFCF5', border: '2px solid rgba(200,139,0,0.3)' }}>
+                  <MessageCircle size={15} />
+                  {msgLoading ? 'Opening chat…' : 'Message Seller'}
+                </button>
+              </div>
             )}
 
             {/* Trust badges */}
