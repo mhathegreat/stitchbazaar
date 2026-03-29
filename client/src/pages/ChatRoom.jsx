@@ -27,6 +27,7 @@ export default function ChatRoom() {
   const [sending,  setSending]    = useState(false)
   const [loading,  setLoading]    = useState(true)
   const bottomRef                 = useRef(null)
+  const messagesRef               = useRef(null)
   const inputRef                  = useRef(null)
 
   const load = useCallback(async () => {
@@ -44,9 +45,10 @@ export default function ChatRoom() {
 
   useEffect(() => { load() }, [load])
 
-  // Scroll to bottom whenever messages change
+  // Scroll the messages container to bottom (not the window)
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const el = messagesRef.current
+    if (el) el.scrollTop = el.scrollHeight
   }, [msgs])
 
   // Poll for new messages every 5 seconds (SSE delivers, this is a fallback)
@@ -130,7 +132,7 @@ export default function ChatRoom() {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-1">
+        <div ref={messagesRef} className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-1">
           {msgs.length === 0 && (
             <p className="text-center text-sm py-8" style={{ color: '#C8B89A' }}>
               No messages yet. Say hello!
