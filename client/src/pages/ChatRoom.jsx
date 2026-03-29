@@ -109,7 +109,7 @@ export default function ChatRoom() {
 
   return (
     <PageWrapper title={`Chat with ${otherName || '…'}`}>
-      <div className="flex flex-col min-h-screen" style={{ background: '#FFFCF5' }}>
+      <div className="flex flex-col" style={{ background: '#FFFCF5', height: 'calc(100vh - 64px)' }}>
 
         {/* Header */}
         <div className="sticky top-0 z-10 flex items-center gap-3 px-4 py-3 shadow-sm"
@@ -130,7 +130,7 @@ export default function ChatRoom() {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-1" style={{ maxHeight: 'calc(100vh - 130px)' }}>
+        <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-1">
           {msgs.length === 0 && (
             <p className="text-center text-sm py-8" style={{ color: '#C8B89A' }}>
               No messages yet. Say hello!

@@ -55,19 +55,26 @@ export function pushToUser(userId, event) {
 }
 
 /**
- * Push an event to all connected users with a given role and persist to each.
+ * Push an event to all users with a given role.
+ * Persists to ALL users with that role in DB (even if offline),
+ * then delivers via SSE to currently connected ones.
  * @param {string} role
  * @param {{ type: string, payload: object }} event
  */
 export function pushToRole(role, event) {
+  // Persist to every user with this role — regardless of whether they're connected
+  prisma.user.findMany({ where: { role }, select: { id: true } })
+    .then(users => {
+      for (const { id } of users) saveNotification(id, event)
+    })
+    .catch(() => { /* non-critical */ })
+
+  // Deliver in real-time to connected users
   const data = `data: ${JSON.stringify(event)}\n\n`
-  for (const [userId, set] of clients) {
+  for (const [, set] of clients) {
     for (const res of set) {
       try {
-        if (res._sseRole === role) {
-          saveNotification(userId, event)
-          res.write(data)
-        }
+        if (res._sseRole === role) res.write(data)
       } catch { /* client gone */ }
     }
   }

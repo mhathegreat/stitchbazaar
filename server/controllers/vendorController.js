@@ -196,8 +196,10 @@ export async function getVendorDashboard(req, res, next) {
       return res.status(404).json({ success: false, message: 'Vendor profile not found' })
     }
 
-    const [totalProducts, orderItems, paidPayouts, pendingPayouts, recentOrders] = await Promise.all([
+    const [totalProducts, totalOrders, orderItems, paidPayouts, pendingPayouts, recentOrders] = await Promise.all([
       prisma.product.count({ where: { vendorId: vendor.id } }),
+
+      prisma.orderItem.count({ where: { vendorId: vendor.id } }),
 
       prisma.orderItem.findMany({
         where: { vendorId: vendor.id, vendorStatus: 'delivered' },
@@ -236,7 +238,7 @@ export async function getVendorDashboard(req, res, next) {
         vendor,
         stats: {
           totalProducts,
-          totalOrders:   orderItems.length,
+          totalOrders,
           grossRevenue,
           netRevenue,
           paidOut:       paidPayouts._sum.amount || 0,
