@@ -13,8 +13,8 @@ export const chatApi = {
   get: (id, page = 1, limit = 500) =>
     api.get(`/conversations/${id}`, { params: { page, limit } }).then(r => r.data),
 
-  send: (id, body) =>
-    api.post(`/conversations/${id}/messages`, { body }).then(r => r.data),
+  send: (id, body, imageUrl) =>
+    api.post(`/conversations/${id}/messages`, { body, ...(imageUrl ? { imageUrl } : {}) }).then(r => r.data),
 
   markRead: (id) =>
     api.put(`/conversations/${id}/read`).then(r => r.data),

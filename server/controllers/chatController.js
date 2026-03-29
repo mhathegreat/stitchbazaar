@@ -152,7 +152,12 @@ export async function getConversation(req, res, next) {
 // ── Send a message ───────────────────────────────────────────────────────────
 export async function sendMessage(req, res, next) {
   try {
-    const schema = z.object({ body: z.string().min(1).max(2000).trim() })
+    const schema = z.object({
+      body:     z.string().max(2000).trim().optional().default(''),
+      imageUrl: z.string().url().optional(),
+    }).refine(d => d.body.length > 0 || d.imageUrl, {
+      message: 'Message must have text or an image',
+    })
     const parsed = schema.safeParse(req.body)
     if (!parsed.success) return res.status(422).json({ success: false, errors: parsed.error.flatten().fieldErrors })
 
@@ -170,14 +175,17 @@ export async function sendMessage(req, res, next) {
       if (conversation.customerId !== req.user.id) return res.status(403).json({ success: false, message: 'Access denied' })
     }
 
+    const { body, imageUrl } = parsed.data
+    const preview = body || '📷 Image'
+
     const [message] = await prisma.$transaction([
       prisma.message.create({
-        data: { conversationId: conversation.id, senderId: req.user.id, body: parsed.data.body },
+        data: { conversationId: conversation.id, senderId: req.user.id, body, imageUrl },
         include: { sender: { select: { id: true, name: true } } },
       }),
       prisma.conversation.update({
         where: { id: conversation.id },
-        data:  { lastMessage: parsed.data.body.slice(0, 100), updatedAt: new Date() },
+        data:  { lastMessage: preview.slice(0, 100), updatedAt: new Date() },
       }),
     ])
 
@@ -191,7 +199,7 @@ export async function sendMessage(req, res, next) {
       payload: {
         conversationId: conversation.id,
         senderName:     req.user.name || 'Someone',
-        preview:        parsed.data.body.slice(0, 60),
+        preview:        preview.slice(0, 60),
       },
     })
 
